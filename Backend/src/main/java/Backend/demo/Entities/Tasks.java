@@ -12,21 +12,21 @@ public class Tasks {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer taskId;
-    
+
     private String taskName;
     private java.sql.Date dueDate;
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "worker_id")
+    @JoinColumn(name = "workerId")
     private Worker worker;
 
     @ManyToOne
-    @JoinColumn(name = "status_id")
+    @JoinColumn(name = "statusId")
     private TaskStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "categoryId")
     private TaskCategory category;
 
     // getters and setters
@@ -61,5 +61,29 @@ public class Tasks {
     
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Worker getWorker() {
+        return worker;
+    }
+
+    public void setWorker(Worker worker) {
+        this.worker = worker;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
+    public TaskCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(TaskCategory category) {
+        this.category = category;
     }
 }

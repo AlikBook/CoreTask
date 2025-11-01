@@ -4,45 +4,57 @@ import Backend.demo.Entities.Tasks;
 import Backend.demo.Repositories.TasksRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/tasks") 
-class TasksController {
-
+@RequestMapping("/tasks")
+public class TaskController {
     @Autowired
     private TasksRepository tasksRepository;
 
-    // Get all tasks
     @GetMapping
     public List<Tasks> getAllTasks() {
-        return tasksRepository.findAll();
+        List<Tasks> taskList = tasksRepository.findAll();
+        if (taskList.size() == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | No tasks found");
+        }
+        return taskList;
     }
 
-    // Get a task by ID
     @GetMapping("/{id}")
-    public Optional<Tasks> getTaskById(@PathVariable Integer id) {
-        return tasksRepository.findById(id);
+    public Tasks getTaskById(@PathVariable Integer id) {
+        return tasksRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | Task with id " + id + " not found"));
     }
 
-    // Create a new task
     @PostMapping
     public Tasks createTask(@RequestBody Tasks task) {
         return tasksRepository.save(task);
     }
 
-    // Update a task
     @PutMapping("/{id}")
     public Tasks updateTask(@PathVariable Integer id, @RequestBody Tasks updatedTask) {
-        updatedTask.setTaskId(id);
-        return tasksRepository.save(updatedTask);
+        return tasksRepository.findById(id)
+            .map(existingTask -> {
+                existingTask.setTaskName(updatedTask.getTaskName());
+                existingTask.setDueDate(updatedTask.getDueDate());
+                existingTask.setDescription(updatedTask.getDescription());
+                existingTask.setWorker(updatedTask.getWorker());
+                existingTask.setStatus(updatedTask.getStatus());
+                existingTask.setCategory(updatedTask.getCategory());
+                return tasksRepository.save(existingTask);
+            })
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PUT | Task with id " + id + " not found"));
     }
 
-    // Delete a task
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable Integer id) {
+        if (!tasksRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Task with id " + id + " not found");
+        }
         tasksRepository.deleteById(id);
     }
 }
