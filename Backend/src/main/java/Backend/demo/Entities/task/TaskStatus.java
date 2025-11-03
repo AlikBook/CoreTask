@@ -1,4 +1,4 @@
-package Backend.demo.Entities;
+package Backend.demo.Entities.task;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

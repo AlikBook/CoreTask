@@ -6,8 +6,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-import Backend.demo.Repositories.WorkerRepository;
-import Backend.demo.Entities.Worker;
+import Backend.demo.Repositories.worker.WorkerRepository;
+import Backend.demo.Entities.worker.Worker;
+import Backend.demo.grpc.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 
 @RestController
 @RequestMapping("/workers")
@@ -15,6 +18,19 @@ public class WorkerController {
 
     @Autowired
     private WorkerRepository workerRepository;
+    
+    // gRPC client to check tasks
+    private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
+    private final DashboardServiceGrpc.DashboardServiceBlockingStub dashboardGrpcClient;
+    
+    public WorkerController() {
+        ManagedChannel channel = ManagedChannelBuilder
+            .forAddress("localhost", 9090)
+            .usePlaintext()
+            .build();
+        this.taskGrpcClient = TaskServiceGrpc.newBlockingStub(channel);
+        this.dashboardGrpcClient = DashboardServiceGrpc.newBlockingStub(channel);
+    }
 
 
     @GetMapping
@@ -34,15 +50,59 @@ public class WorkerController {
 
     @PostMapping
     public Worker createWorker(@RequestBody Worker worker) {
-        return workerRepository.save(worker);
+        Worker savedWorker = workerRepository.save(worker);
+        
+        // Notify dashboard via gRPC
+        try {
+            WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
+                .setAction("CREATE")
+                .setWorkerName(savedWorker.getWorkerName() + " " + savedWorker.getWorkerLastName())
+                .setDetails("Worker created with ID: " + savedWorker.getWorkerId())
+                .build();
+            dashboardGrpcClient.notifyWorkerChange(request);
+        } catch (Exception e) {
+            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+        }
+        
+        return savedWorker;
     }
 
     @DeleteMapping("/{id}")
     public void deleteWorker(@PathVariable Integer id) {
-        if (!workerRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Worker with id : "+id + " not found");
+        Worker worker = workerRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Worker with id : "+id + " not found"));
+        
+        String workerName = worker.getWorkerName() + " " + worker.getWorkerLastName();
+        
+        // Unassign worker from all tasks via gRPC
+        try {
+            UnassignWorkerRequest request = UnassignWorkerRequest.newBuilder()
+                .setWorkerId(id)
+                .build();
+            UnassignWorkerResponse response = taskGrpcClient.unassignWorkerFromTasks(request);
+            
+            if (response.getTasksModified() > 0) {
+                System.out.println("✓ gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
+            } else {
+                System.out.println("✓ gRPC: Worker has no assigned tasks");
+            }
+        } catch (Exception e) {
+            System.out.println("⚠ gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
         }
+        
         workerRepository.deleteById(id);
+        
+        // Notify dashboard via gRPC
+        try {
+            WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
+                .setAction("DELETE")
+                .setWorkerName(workerName)
+                .setDetails("Worker deleted with ID: " + id)
+                .build();
+            dashboardGrpcClient.notifyWorkerChange(request);
+        } catch (Exception e) {
+            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")

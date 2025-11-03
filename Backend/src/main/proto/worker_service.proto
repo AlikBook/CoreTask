@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "WorkerServiceProto";
+
+service WorkerService {
+  rpc GetWorkerById (WorkerIdRequest) returns (WorkerResponse);
+  rpc GetAllWorkers (EmptyRequest) returns (WorkerListResponse);
+  rpc CreateWorker (CreateWorkerRequest) returns (WorkerResponse);
+  rpc UpdateWorker (UpdateWorkerRequest) returns (WorkerResponse);
+  rpc DeleteWorker (WorkerIdRequest) returns (EmptyResponse);
+}
+
+message WorkerIdRequest {
+  int32 id = 1;
+}
+
+message WorkerResponse {
+  int32 id = 1;
+  string workerName = 2;
+  string workerLastName = 3;
+}
+
+message WorkerListResponse {
+  repeated WorkerResponse workers = 1;
+}
+
+message CreateWorkerRequest {
+  string workerName = 1;
+  string workerLastName = 2;
+}
+
+message UpdateWorkerRequest {
+  int32 id = 1;
+  string workerName = 2;
+  string workerLastName = 3;
+}

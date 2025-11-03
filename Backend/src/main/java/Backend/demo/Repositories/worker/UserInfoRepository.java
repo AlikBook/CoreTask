@@ -1,6 +1,6 @@
-package Backend.demo.Repositories;
+package Backend.demo.Repositories.worker;
 
-import Backend.demo.Entities.UserInfo;
+import Backend.demo.Entities.worker.UserInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserInfoRepository extends JpaRepository<UserInfo, Integer> {

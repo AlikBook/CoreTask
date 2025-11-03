@@ -1,11 +1,12 @@
-package Backend.demo.Entities;
+package Backend.demo.Entities.task;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Tasks {
@@ -17,17 +18,16 @@ public class Tasks {
     private java.sql.Date dueDate;
     private String description;
 
+    // Store IDs instead of entity references (separate databases)
+    private Integer workerId;
+    
     @ManyToOne
-    @JoinColumn(name = "workerId")
-    private Worker worker;
-
+    @JoinColumn(name = "status_id")
+    private TaskStatus status;  
+    
     @ManyToOne
-    @JoinColumn(name = "statusId")
-    private TaskStatus status;
-
-    @ManyToOne
-    @JoinColumn(name = "categoryId")
-    private TaskCategory category;
+    @JoinColumn(name = "category_id")
+    private TaskCategory category; 
 
     // getters and setters
 
@@ -63,12 +63,12 @@ public class Tasks {
         this.description = description;
     }
 
-    public Worker getWorker() {
-        return worker;
+    public Integer getWorkerId() {
+        return workerId;
     }
 
-    public void setWorker(Worker worker) {
-        this.worker = worker;
+    public void setWorkerId(Integer workerId) {
+        this.workerId = workerId;
     }
 
     public TaskStatus getStatus() {
