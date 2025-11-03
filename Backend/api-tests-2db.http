@@ -1,0 +1,276 @@
+### API Tests for Mixed Architecture (JPA + gRPC)
+### Same-DB: Status & Category use @ManyToOne (JPA/SQL FK)
+### Cross-DB: Worker uses Integer ID (gRPC validation)
+
+### Variables
+@baseUrl = http://localhost:8080
+
+### ============================================
+### SETUP: Create Required Entities First
+### ============================================
+
+### 1. Create Task Status (taskdb - JPA managed)
+POST {{baseUrl}}/statuses
+Content-Type: application/json
+
+{
+  "statusName": "In Progress"
+}
+
+### 2. Create another Status
+POST {{baseUrl}}/statuses
+Content-Type: application/json
+
+{
+  "statusName": "Completed"
+}
+
+### 3. Create Task Category (taskdb - JPA managed)
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Development"
+}
+
+### 4. Create another Category
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Testing"
+}
+
+### 5. Create Worker (workerdb - separate database)
+POST {{baseUrl}}/workers
+Content-Type: application/json
+
+{
+  "workerName": "John",
+  "workerLastName": "Doe"
+}
+
+### 6. Create another Worker
+POST {{baseUrl}}/workers
+Content-Type: application/json
+
+{
+  "workerName": "Jane",
+  "workerLastName": "Smith"
+}
+
+### ============================================
+### TASK OPERATIONS (Mixed Validation)
+### ============================================
+
+### 7. Create Task (gRPC for Worker, JPA for Status/Category)
+### Console shows: ✓ gRPC: Worker validated + ✓ JPA: Status/Category validated
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "taskName": "Complete OOSD Project",
+  "description": "Implement REST and gRPC with mixed architecture",
+  "workerId": 1,
+  "status": {
+    "statusId": 1
+  },
+  "category": {
+    "categoryId": 1
+  }
+}
+
+### 8. Create another Task
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "taskName": "Write Documentation",
+  "description": "Document the mixed JPA+gRPC approach",
+  "workerId": 2,
+  "status": {
+    "statusId": 1
+  },
+  "category": {
+    "categoryId": 1
+  }
+}
+
+### 9. Get All Tasks
+GET {{baseUrl}}/tasks
+
+### 10. Get Task by ID (includes Status and Category objects via JPA)
+GET {{baseUrl}}/tasks/1
+
+### 11. Update Task (validates via gRPC and JPA)
+PUT {{baseUrl}}/tasks/1
+Content-Type: application/json
+
+{
+  "taskName": "Complete OOSD Project - UPDATED",
+  "description": "Updated description",
+  "workerId": 1,
+  "status": {
+    "statusId": 2
+  },
+  "category": {
+    "categoryId": 1
+  }
+}
+
+### 12. Delete Task
+DELETE {{baseUrl}}/tasks/1
+
+### ============================================
+### VALIDATION TESTS (Should Fail with 400)
+### ============================================
+
+### 13. Invalid Worker ID (gRPC validation fails)
+### Expected: "Worker with id 999 not found via gRPC"
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "taskName": "Invalid Task",
+  "workerId": 999,
+  "status": {
+    "statusId": 1
+  },
+  "category": {
+    "categoryId": 1
+  }
+}
+
+### 14. Invalid Status ID (JPA validation fails)
+### Expected: "Status with id 999 not found"
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "taskName": "Invalid Task",
+  "workerId": 1,
+  "status": {
+    "statusId": 999
+  },
+  "category": {
+    "categoryId": 1
+  }
+}
+
+### 15. Invalid Category ID (JPA validation fails)
+### Expected: "Category with id 999 not found"
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "taskName": "Invalid Task",
+  "workerId": 1,
+  "status": {
+    "statusId": 1
+  },
+  "category": {
+    "categoryId": 999
+  }
+}
+
+### ============================================
+### WORKER OPERATIONS (workerdb)
+### ============================================
+
+### 16. Get All Workers
+GET {{baseUrl}}/workers
+
+### 17. Get Worker by ID
+GET {{baseUrl}}/workers/1
+
+### 18. Update Worker
+PUT {{baseUrl}}/workers/1
+Content-Type: application/json
+
+{
+  "workerName": "John Updated",
+  "workerLastName": "Doe Updated"
+}
+
+### 19. Delete Worker (checks for assigned tasks via gRPC)
+### Console: ⚠ gRPC: Worker has X assigned task(s)
+DELETE {{baseUrl}}/workers/2
+
+### ============================================
+### STATUS OPERATIONS (taskdb - JPA managed)
+### ============================================
+
+### 20. Get All Statuses
+GET {{baseUrl}}/statuses
+
+### 21. Get Status by ID
+GET {{baseUrl}}/statuses/1
+
+### 22. Update Status
+PUT {{baseUrl}}/statuses/1
+Content-Type: application/json
+
+{
+  "statusName": "In Progress - Updated"
+}
+
+### 23. Delete Status
+### Note: May fail due to SQL FK constraint if tasks reference it!
+DELETE {{baseUrl}}/statuses/2
+
+### ============================================
+### CATEGORY OPERATIONS (taskdb - JPA managed)
+### ============================================
+
+### 24. Get All Categories
+GET {{baseUrl}}/categories
+
+### 25. Get Category by ID
+GET {{baseUrl}}/categories/1
+
+### 26. Create Category
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Bug Fix"
+}
+
+### 27. Delete Category
+### Note: May fail due to SQL FK constraint if tasks reference it!
+DELETE {{baseUrl}}/categories/2
+
+### ============================================
+### USER INFO OPERATIONS (workerdb)
+### ============================================
+
+### 28. Create User
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "userName": "admin",
+  "password": "password123",
+  "mail": "admin@example.com"
+}
+
+### 29. Get All Users
+GET {{baseUrl}}/users
+
+### 30. Get User by ID
+GET {{baseUrl}}/users/1
+
+### 31. Update User
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "userName": "admin_updated",
+  "password": "newpassword456",
+  "mail": "admin_updated@example.com"
+}
+
+### 32. Delete User
+DELETE {{baseUrl}}/users/1
+
+

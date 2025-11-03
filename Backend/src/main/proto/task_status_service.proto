@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "TaskStatusServiceProto";
+
+service TaskStatusService {
+  rpc GetStatusById (StatusIdRequest) returns (StatusResponse);
+  rpc GetAllStatuses (EmptyRequest) returns (StatusListResponse);
+  rpc CreateStatus (CreateStatusRequest) returns (StatusResponse);
+  rpc UpdateStatus (UpdateStatusRequest) returns (StatusResponse);
+  rpc DeleteStatus (StatusIdRequest) returns (EmptyResponse);
+}
+
+message StatusIdRequest {
+  int32 id = 1;
+}
+
+message StatusResponse {
+  int32 id = 1;
+  string statusName = 2;
+}
+
+message StatusListResponse {
+  repeated StatusResponse statuses = 1;
+}
+
+message CreateStatusRequest {
+  string statusName = 1;
+}
+
+message UpdateStatusRequest {
+  int32 id = 1;
+  string statusName = 2;
+}

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "TaskServiceProto";
+
+service TaskService {
+  rpc GetTaskById (TaskIdRequest) returns (TaskResponse);
+  rpc GetAllTasks (EmptyRequest) returns (TaskListResponse);
+  rpc CreateTask (CreateTaskRequest) returns (TaskResponse);
+  rpc UpdateTask (UpdateTaskRequest) returns (TaskResponse);
+  rpc DeleteTask (TaskIdRequest) returns (EmptyResponse);
+  rpc UnassignWorkerFromTasks (UnassignWorkerRequest) returns (UnassignWorkerResponse);
+}
+
+message TaskListResponse {
+  repeated TaskResponse tasks = 1;
+}
+
+message CreateTaskRequest {
+  string taskName = 1;
+  string description = 2;
+  int32 workerId = 3;
+  int32 statusId = 4;
+  int32 categoryId = 5;
+}
+
+message UpdateTaskRequest {
+  int32 id = 1;
+  string taskName = 2;
+  string description = 3;
+}
+
+message TaskIdRequest {
+  int32 id = 1;
+}
+
+message TaskResponse {
+  int32 id = 1;
+  string taskName = 2;
+  string description = 3;
+  int32 workerId = 4;
+  int32 statusId = 5;
+  int32 categoryId = 6;
+}
+
+message UnassignWorkerRequest {
+  int32 workerId = 1;
+}
+
+message UnassignWorkerResponse {
+  int32 tasksModified = 1;
+}

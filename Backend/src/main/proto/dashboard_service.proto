@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "DashboardServiceProto";
+
+service DashboardService {
+  rpc GetDashboard (EmptyRequest) returns (DashboardResponse);
+  rpc NotifyTaskChange (TaskChangeRequest) returns (EmptyResponse);
+  rpc NotifyWorkerChange (WorkerChangeRequest) returns (EmptyResponse);
+}
+
+message DashboardResponse {
+  int32 totalWorkers = 1;
+  int32 totalTasks = 2;
+  map<string, int32> tasksByStatus = 3;
+  map<string, int32> tasksByCategory = 4;
+  repeated TaskHistoryResponse recentHistory = 5;
+}
+
+message TaskHistoryResponse {
+  int32 id = 1;
+  string action = 2;
+  string taskName = 3;
+  string timestamp = 4;
+  string details = 5;
+}
+
+message TaskChangeRequest {
+  string action = 1;  // CREATE, UPDATE, DELETE
+  string taskName = 2;
+  int32 statusId = 3;
+  int32 categoryId = 4;
+  string details = 5;
+}
+
+message WorkerChangeRequest {
+  string action = 1;  // CREATE, DELETE
+  string workerName = 2;
+  string details = 3;
+}

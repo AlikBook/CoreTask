@@ -1,7 +1,16 @@
 package Backend.demo.Controllers;
 
-import Backend.demo.Entities.Tasks;
-import Backend.demo.Repositories.TasksRepository;
+import Backend.demo.Entities.task.Tasks;
+import Backend.demo.Entities.task.TaskStatus;
+import Backend.demo.Entities.task.TaskCategory;
+import Backend.demo.Repositories.task.TasksRepository;
+import Backend.demo.Repositories.task.StatusRepository;
+import Backend.demo.Repositories.task.TaskCategoryRepository;
+import Backend.demo.Repositories.dashboard.TaskHistoryRepository;
+import Backend.demo.Entities.dashboard.TaskHistory;
+import Backend.demo.grpc.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,6 +23,30 @@ import java.util.List;
 public class TaskController {
     @Autowired
     private TasksRepository tasksRepository;
+    
+    @Autowired
+    private StatusRepository statusRepository;
+    
+    @Autowired
+    private TaskCategoryRepository categoryRepository;
+    
+    @Autowired
+    private TaskHistoryRepository taskHistoryRepository;
+    
+    // gRPC client only for cross-database validation (Worker)
+    private final WorkerServiceGrpc.WorkerServiceBlockingStub workerGrpcClient;
+    private final DashboardServiceGrpc.DashboardServiceBlockingStub dashboardGrpcClient;
+    
+    public TaskController() {
+        // Create gRPC channel for Worker validation
+        ManagedChannel channel = ManagedChannelBuilder
+            .forAddress("localhost", 9090)
+            .usePlaintext()
+            .build();
+        
+        this.workerGrpcClient = WorkerServiceGrpc.newBlockingStub(channel);
+        this.dashboardGrpcClient = DashboardServiceGrpc.newBlockingStub(channel);
+    }
 
     @GetMapping
     public List<Tasks> getAllTasks() {
@@ -32,29 +65,160 @@ public class TaskController {
 
     @PostMapping
     public Tasks createTask(@RequestBody Tasks task) {
-        return tasksRepository.save(task);
+        // Validate Worker exists using gRPC (cross-database) - OPTIONAL now
+        if (task.getWorkerId() != null && task.getWorkerId() != 0) {
+            try {
+                WorkerIdRequest workerRequest = WorkerIdRequest.newBuilder()
+                    .setId(task.getWorkerId())
+                    .build();
+                WorkerResponse worker = workerGrpcClient.getWorkerById(workerRequest);
+                
+                if (worker.getId() > 0) {
+                    System.out.println("✓ gRPC: Worker validated - " + worker.getWorkerName() + " " + worker.getWorkerLastName());
+                }
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Worker with id " + task.getWorkerId() + " not found via gRPC");
+            }
+        } else {
+            System.out.println("ℹ Task created without assigned worker");
+        }
+        
+        // Validate Status exists using JPA (same database)
+        if (task.getStatus() != null && task.getStatus().getStatusId() != null) {
+            TaskStatus status = statusRepository.findById(task.getStatus().getStatusId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Status with id " + task.getStatus().getStatusId() + " not found"));
+            task.setStatus(status);
+            System.out.println("✓ JPA: Status validated - " + status.getStatusName());
+        }
+        
+        // Validate Category exists using JPA (same database)
+        if (task.getCategory() != null && task.getCategory().getCategoryId() != null) {
+            TaskCategory category = categoryRepository.findById(task.getCategory().getCategoryId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                    "Category with id " + task.getCategory().getCategoryId() + " not found"));
+            task.setCategory(category);
+            System.out.println("✓ JPA: Category validated - " + category.getCategoryName());
+        }
+        
+        Tasks savedTask = tasksRepository.save(task);
+        
+        // Notify dashboard via gRPC
+        notifyDashboardTaskChange("CREATE", savedTask);
+        
+        // Also save to history directly
+        String details = "Task created with ID: " + savedTask.getTaskId();
+        if (savedTask.getWorkerId() != null) {
+            details += ", assigned to worker " + savedTask.getWorkerId();
+        }
+        TaskHistory history = new TaskHistory("CREATE", savedTask.getTaskName(), details);
+        taskHistoryRepository.save(history);
+        
+        return savedTask;
     }
 
     @PutMapping("/{id}")
     public Tasks updateTask(@PathVariable Integer id, @RequestBody Tasks updatedTask) {
         return tasksRepository.findById(id)
             .map(existingTask -> {
+                // Validate Worker via gRPC if being updated (cross-database) - OPTIONAL now
+                if (updatedTask.getWorkerId() != null && updatedTask.getWorkerId() != 0) {
+                    try {
+                        WorkerIdRequest workerRequest = WorkerIdRequest.newBuilder()
+                            .setId(updatedTask.getWorkerId())
+                            .build();
+                        WorkerResponse worker = workerGrpcClient.getWorkerById(workerRequest);
+                        System.out.println("✓ gRPC: Worker validated for update - " + worker.getWorkerName());
+                    } catch (Exception e) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Worker not found via gRPC");
+                    }
+                }
+                
+                // Validate Status via JPA if being updated (same database)
+                if (updatedTask.getStatus() != null && updatedTask.getStatus().getStatusId() != null) {
+                    TaskStatus status = statusRepository.findById(updatedTask.getStatus().getStatusId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status not found"));
+                    existingTask.setStatus(status);
+                    System.out.println("✓ JPA: Status validated for update - " + status.getStatusName());
+                }
+                
+                // Validate Category via JPA if being updated (same database)
+                if (updatedTask.getCategory() != null && updatedTask.getCategory().getCategoryId() != null) {
+                    TaskCategory category = categoryRepository.findById(updatedTask.getCategory().getCategoryId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));
+                    existingTask.setCategory(category);
+                    System.out.println("✓ JPA: Category validated for update - " + category.getCategoryName());
+                }
+                
                 existingTask.setTaskName(updatedTask.getTaskName());
                 existingTask.setDueDate(updatedTask.getDueDate());
                 existingTask.setDescription(updatedTask.getDescription());
-                existingTask.setWorker(updatedTask.getWorker());
-                existingTask.setStatus(updatedTask.getStatus());
-                existingTask.setCategory(updatedTask.getCategory());
-                return tasksRepository.save(existingTask);
+                existingTask.setWorkerId(updatedTask.getWorkerId());
+                
+                Tasks saved = tasksRepository.save(existingTask);
+                
+                // Notify dashboard via gRPC
+                notifyDashboardTaskChange("UPDATE", saved);
+                
+                // Save to history
+                String details = "Task updated";
+                TaskHistory history = new TaskHistory("UPDATE", saved.getTaskName(), details);
+                taskHistoryRepository.save(history);
+                
+                return saved;
             })
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PUT | Task with id " + id + " not found"));
     }
 
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable Integer id) {
-        if (!tasksRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Task with id " + id + " not found");
-        }
+        Tasks task = tasksRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Task with id " + id + " not found"));
+        
+        String taskName = task.getTaskName();
+        
         tasksRepository.deleteById(id);
+        
+        // Notify dashboard via gRPC
+        try {
+            TaskChangeRequest request = TaskChangeRequest.newBuilder()
+                .setAction("DELETE")
+                .setTaskName(taskName)
+                .setDetails("Task deleted with ID: " + id)
+                .build();
+            dashboardGrpcClient.notifyTaskChange(request);
+        } catch (Exception e) {
+            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+        }
+        
+        // Save to history
+        TaskHistory history = new TaskHistory("DELETE", taskName, "Task deleted with ID: " + id);
+        taskHistoryRepository.save(history);
+    }
+    
+    // Helper method to notify dashboard
+    private void notifyDashboardTaskChange(String action, Tasks task) {
+        try {
+            TaskChangeRequest.Builder requestBuilder = TaskChangeRequest.newBuilder()
+                .setAction(action)
+                .setTaskName(task.getTaskName());
+            
+            if (task.getStatus() != null) {
+                requestBuilder.setStatusId(task.getStatus().getStatusId());
+            }
+            if (task.getCategory() != null) {
+                requestBuilder.setCategoryId(task.getCategory().getCategoryId());
+            }
+            
+            String details = action + " task: " + task.getTaskName();
+            if (task.getWorkerId() != null) {
+                details += " (worker: " + task.getWorkerId() + ")";
+            }
+            requestBuilder.setDetails(details);
+            
+            dashboardGrpcClient.notifyTaskChange(requestBuilder.build());
+        } catch (Exception e) {
+            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+        }
     }
 }

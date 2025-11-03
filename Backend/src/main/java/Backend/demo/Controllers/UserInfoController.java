@@ -1,7 +1,7 @@
 package Backend.demo.Controllers;
 
-import Backend.demo.Entities.UserInfo;
-import Backend.demo.Repositories.UserInfoRepository;
+import Backend.demo.Entities.worker.UserInfo;
+import Backend.demo.Repositories.worker.UserInfoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
