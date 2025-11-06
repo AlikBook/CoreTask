@@ -82,6 +82,64 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     }
 
     @Override
+    public void reassignTasksWithStatus(ReassignStatusRequest request, StreamObserver<ReassignStatusResponse> responseObserver) {
+        int oldStatusId = request.getOldStatusId();
+        int newStatusId = request.getNewStatusId();
+        
+        // Find all tasks with the old status
+        List<Tasks> tasks = tasksRepository.findAll();
+        int modifiedCount = 0;
+        
+        for (Tasks task : tasks) {
+            if (task.getStatus() != null && task.getStatus().getStatusId().equals(oldStatusId)) {
+                // Create new status object with newStatusId
+                Backend.demo.Entities.task.TaskStatus newStatus = new Backend.demo.Entities.task.TaskStatus();
+                newStatus.setStatusId(newStatusId);
+                task.setStatus(newStatus);
+                tasksRepository.save(task);
+                modifiedCount++;
+                System.out.println("✓ gRPC: Reassigned task '" + task.getTaskName() + "' from status " + oldStatusId + " to " + newStatusId);
+            }
+        }
+        
+        ReassignStatusResponse response = ReassignStatusResponse.newBuilder()
+            .setTasksModified(modifiedCount)
+            .build();
+        
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void reassignTasksWithCategory(ReassignCategoryRequest request, StreamObserver<ReassignCategoryResponse> responseObserver) {
+        int oldCategoryId = request.getOldCategoryId();
+        int newCategoryId = request.getNewCategoryId();
+        
+        // Find all tasks with the old category
+        List<Tasks> tasks = tasksRepository.findAll();
+        int modifiedCount = 0;
+        
+        for (Tasks task : tasks) {
+            if (task.getCategory() != null && task.getCategory().getCategoryId().equals(oldCategoryId)) {
+                // Create new category object with newCategoryId
+                Backend.demo.Entities.task.TaskCategory newCategory = new Backend.demo.Entities.task.TaskCategory();
+                newCategory.setCategoryId(newCategoryId);
+                task.setCategory(newCategory);
+                tasksRepository.save(task);
+                modifiedCount++;
+                System.out.println("✓ gRPC: Reassigned task '" + task.getTaskName() + "' from category " + oldCategoryId + " to " + newCategoryId);
+            }
+        }
+        
+        ReassignCategoryResponse response = ReassignCategoryResponse.newBuilder()
+            .setTasksModified(modifiedCount)
+            .build();
+        
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void createTask(CreateTaskRequest request, StreamObserver<TaskResponse> responseObserver) {
         // This can be implemented if needed for full gRPC support
         responseObserver.onNext(TaskResponse.newBuilder().build());

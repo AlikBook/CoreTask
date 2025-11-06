@@ -36,9 +36,7 @@ public class WorkerController {
     @GetMapping
     public List<Worker> getWorkers() {
         List<Worker> worker_list = workerRepository.findAll();
-        if(worker_list.size() == 0){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | No workers found");
-        }
+        
         return worker_list;        
     }
 
@@ -82,12 +80,12 @@ public class WorkerController {
             UnassignWorkerResponse response = taskGrpcClient.unassignWorkerFromTasks(request);
             
             if (response.getTasksModified() > 0) {
-                System.out.println("✓ gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
+                System.out.println("gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
             } else {
-                System.out.println("✓ gRPC: Worker has no assigned tasks");
+                System.out.println("gRPC: Worker has no assigned tasks");
             }
         } catch (Exception e) {
-            System.out.println("⚠ gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
+            System.out.println("gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
         }
         
         workerRepository.deleteById(id);

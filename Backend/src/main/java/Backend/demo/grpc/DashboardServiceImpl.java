@@ -125,7 +125,6 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
 
     @Override
     public void notifyWorkerChange(WorkerChangeRequest request, StreamObserver<EmptyResponse> responseObserver) {
-        // Create history entry for worker changes (optional)
         String details = request.getDetails();
         if (details == null || details.isEmpty()) {
             details = request.getAction() + " worker: " + request.getWorkerName();

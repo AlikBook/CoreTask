@@ -1,24 +1,22 @@
 <template>
     <div class="dashboard-container">
-        <h1 class="page-title">📊 Dashboard</h1>
+        <h1 class="page-title">Dashboard</h1>
 
         <div v-if="loading" class="loading">Loading dashboard...</div>
         <div v-else-if="error" class="error">{{ error }}</div>
 
         <div v-else>
-            <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card workers">
-                    <div class="stat-icon">👥</div>
+                    
                     <div class="stat-content">
                         <h3>Total Workers</h3>
                         <p class="stat-number">{{ dashboardData.totalWorkers }}</p>
-                        <span class="stat-label">via gRPC</span>
                     </div>
                 </div>
 
                 <div class="stat-card tasks">
-                    <div class="stat-icon">📋</div>
+                    
                     <div class="stat-content">
                         <h3>Total Tasks</h3>
                         <p class="stat-number">{{ dashboardData.totalTasks }}</p>

@@ -18,7 +18,6 @@ public class Tasks {
     private java.sql.Date dueDate;
     private String description;
 
-    // Store IDs instead of entity references (separate databases)
     private Integer workerId;
     
     @ManyToOne

@@ -13,6 +13,81 @@
             <button @click="loadTasks" class="btn-refresh">
                 Refresh
             </button>
+
+            <button @click="openStatusModal" class="btn-status-creation">
+                Manage Status
+            </button>
+
+            <button @click="openCategoryModal" class="btn-category-creation">
+                Manage Category
+            </button>
+        <!-- Create Status Modal -->
+        <div v-if="showStatusModal" class="modal-overlay" @click.self="closeStatusModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create / Delete Status</h2>
+                    <button @click="closeStatusModal" class="close-btn">✖</button>
+                </div>
+                <div class="modal-body">
+                    <div class="status-create-section">
+                        <h3>Add New Status</h3>
+                        <div class="form-group">
+                            <label>Status Name</label>
+                            <input v-model="newStatusName" type="text" placeholder="Enter status name" />
+                        </div>
+                        <button @click="createStatus" class="btn-primary">Create Status</button>
+                    </div>
+                    <hr class="divider" />
+                    <div class="form-group">
+                        <label>Delete Existing Statuses</label>
+                        <div v-if="statuses.length === 0" class="no-data">No statuses found.</div>
+                        <div v-else class="status-list">
+                            <div v-for="status in statuses" :key="status.statusId" class="status-item">
+                                <span class="status-name">{{ status.statusName }}</span>
+                                <button @click="deleteStatus(status.statusId)" class="btn-delete-status">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button @click="closeStatusModal" class="btn-cancel">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Category Modal -->
+        <div v-if="showCategoryModal" class="modal-overlay" @click.self="closeCategoryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create / Delete Category</h2>
+                    <button @click="closeCategoryModal" class="close-btn">✖</button>
+                </div>
+                <div class="modal-body">
+                    <div class="category-create-section">
+                        <h3>Add New Category</h3>
+                        <div class="form-group">
+                            <label>Category Name</label>
+                            <input v-model="newCategoryName" type="text" placeholder="Enter category name" />
+                        </div>
+                        <button @click="createCategory" class="btn-primary">Create Category</button>
+                    </div>
+                    <hr class="divider" />
+                    <div class="form-group">
+                        <label>Delete Existing Categories</label>
+                        <div v-if="categories.length === 0" class="no-data">No categories found.</div>
+                        <div v-else class="category-list">
+                            <div v-for="category in categories" :key="category.categoryId" class="category-item">
+                                <span class="category-name">{{ category.categoryName }}</span>
+                                <button @click="deleteCategory(category.categoryId)" class="btn-delete-category">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button @click="closeCategoryModal" class="btn-cancel">Close</button>
+                </div>
+            </div>
+        </div>
         </div>
 
         <div v-if="loading" class="loading">Loading tasks...</div>
@@ -188,6 +263,94 @@
 </template>
 
 <script setup>
+const deleteStatus = async (statusId) => {
+    const tasksWithStatus = tasks.value.filter(task => task.status?.statusId === statusId);
+    
+    if (tasksWithStatus.length > 0) {
+
+        alert('Cannot delete a status that is assigned to a task');
+            return;
+        
+    } else {
+        // No tasks using this status, can delete directly
+        if (!confirm('Are you sure you want to delete this status?')) return;
+        
+        try {
+            await api.deleteStatus(statusId);
+            loadStatuses();
+        } catch (e) {
+            alert('Error deleting status: ' + (e.response?.data || e.message));
+        }
+    }
+};
+
+const deleteCategory = async (categoryId) => {
+    const tasksWithCategory = tasks.value.filter(task => task.category?.categoryId === categoryId);
+    if (tasksWithCategory.length > 0) {
+        
+        alert('Cannot delete this category, it is assigned to a task (same database)');
+            
+        
+    } else {
+        if (!confirm('Are you sure you want to delete this category?')) return;
+        
+        try {
+            await api.deleteCategory(categoryId);
+            loadCategories();
+        } catch (e) {
+            alert('Error deleting category: ' + (e.response?.data || e.message));
+        }
+    }
+};
+const showStatusModal = ref(false);
+const showCategoryModal = ref(false);
+const newStatusName = ref("");
+const newCategoryName = ref("");
+
+const openStatusModal = () => {
+    newStatusName.value = "";
+    showStatusModal.value = true;
+    loadStatuses(); // Refresh status list when opening modal
+};
+const closeStatusModal = () => {
+    showStatusModal.value = false;
+};
+const openCategoryModal = () => {
+    newCategoryName.value = "";
+    showCategoryModal.value = true;
+    loadCategories(); // Refresh category list when opening modal
+};
+const closeCategoryModal = () => {
+    showCategoryModal.value = false;
+};
+
+const createStatus = async () => {
+    if (!newStatusName.value.trim()) {
+        alert("Please enter a status name");
+        return;
+    }
+    try {
+        await api.createStatus({ statusName: newStatusName.value });
+        newStatusName.value = ""; // Clear input after creation
+        loadStatuses();
+    } catch (e) {
+        alert("Error creating status: " + (e.response?.data || e.message));
+    }
+};
+
+const createCategory = async () => {
+    if (!newCategoryName.value.trim()) {
+        alert("Please enter a category name");
+        return;
+    }
+    try {
+        await api.createCategory({ categoryName: newCategoryName.value });
+        newCategoryName.value = ""; // Clear input after creation
+        loadCategories();
+    } catch (e) {
+        alert("Error creating category: " + (e.response?.data || e.message));
+    }
+};
 import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 
@@ -384,6 +547,17 @@ const getWorkerName = (workerId) => {
     return worker ? `${worker.workerName} ${worker.workerLastName}` : 'Unknown';
 };
 
+
+//Status 
+
+const create_status = async (status_name)=>{
+    try{
+        await api.createStatus(status_name)
+    }catch(e){
+        console.log(e.message)
+    }
+}
+
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -399,6 +573,83 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Status/Category Create Section Styles */
+.status-create-section, .category-create-section {
+    margin-bottom: 30px;
+}
+
+.status-create-section h3, .category-create-section h3 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Status/Category Modal List Styles */
+.status-list, .category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.status-item, .category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9f9f9;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.status-item:hover, .category-item:hover {
+    background: #f0f0f0;
+}
+
+.status-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+.btn-delete-status {
+    padding: 8px 16px;
+    background: #f5576c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-delete-status:hover {
+    background: #e04354;
+    transform: scale(1.05);
+}
+
+.btn-delete-category {
+    padding: 8px 16px;
+    background: #f5576c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-delete-category:hover {
+    background: #e04354;
+    transform: scale(1.05);
+}
 .task-organizer-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -456,6 +707,36 @@ onMounted(() => {
 
 .btn-refresh:hover {
     background: #38d66a;
+}
+
+.btn-status-creation, .btn-category-creation {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.btn-status-creation {
+    background: linear-gradient(135deg, #43e97b 0%, #38d66a 100%);
+    color: white;
+}
+
+.btn-status-creation:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
+}
+
+.btn-category-creation {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.btn-category-creation:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
 }
 
 .loading, .error, .no-data {

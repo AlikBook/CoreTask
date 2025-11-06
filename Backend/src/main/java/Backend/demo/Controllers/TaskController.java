@@ -51,9 +51,7 @@ public class TaskController {
     @GetMapping
     public List<Tasks> getAllTasks() {
         List<Tasks> taskList = tasksRepository.findAll();
-        if (taskList.size() == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | No tasks found");
-        }
+        
         return taskList;
     }
 
@@ -65,7 +63,6 @@ public class TaskController {
 
     @PostMapping
     public Tasks createTask(@RequestBody Tasks task) {
-        // Validate Worker exists using gRPC (cross-database) - OPTIONAL now
         if (task.getWorkerId() != null && task.getWorkerId() != 0) {
             try {
                 WorkerIdRequest workerRequest = WorkerIdRequest.newBuilder()
@@ -121,7 +118,6 @@ public class TaskController {
     public Tasks updateTask(@PathVariable Integer id, @RequestBody Tasks updatedTask) {
         return tasksRepository.findById(id)
             .map(existingTask -> {
-                // Validate Worker via gRPC if being updated (cross-database) - OPTIONAL now
                 if (updatedTask.getWorkerId() != null && updatedTask.getWorkerId() != 0) {
                     try {
                         WorkerIdRequest workerRequest = WorkerIdRequest.newBuilder()
