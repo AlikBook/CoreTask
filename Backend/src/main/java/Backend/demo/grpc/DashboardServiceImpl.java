@@ -53,9 +53,9 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
             EmptyRequest workerRequest = EmptyRequest.newBuilder().build();
             WorkerListResponse workers = workerGrpcClient.getAllWorkers(workerRequest);
             totalWorkers = workers.getWorkersCount();
-            System.out.println("✓ gRPC: Dashboard retrieved worker count: " + totalWorkers);
+            System.out.println(" gRPC: Dashboard retrieved worker count: " + totalWorkers);
         } catch (Exception e) {
-            System.out.println("⚠ gRPC: Failed to get worker count for dashboard: " + e.getMessage());
+            System.out.println(" gRPC: Failed to get worker count for dashboard: " + e.getMessage());
         }
         
         // Count tasks
@@ -67,7 +67,7 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         List<TaskStatus> allStatuses = statusRepository.findAll();
         for (TaskStatus status : allStatuses) {
             long count = allTasks.stream()
-                .filter(task -> task.getStatus() != null && task.getStatus().getStatusId().equals(status.getStatusId()))
+                .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
                 .count();
             tasksByStatus.put(status.getStatusName(), (int) count);
         }
@@ -77,7 +77,7 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         List<TaskCategory> allCategories = categoryRepository.findAll();
         for (TaskCategory category : allCategories) {
             long count = allTasks.stream()
-                .filter(task -> task.getCategory() != null && task.getCategory().getCategoryId().equals(category.getCategoryId()))
+                .filter(task -> task.getCategoryId() != null && task.getCategoryId().equals(category.getCategoryId()))
                 .count();
             tasksByCategory.put(category.getCategoryName(), (int) count);
         }

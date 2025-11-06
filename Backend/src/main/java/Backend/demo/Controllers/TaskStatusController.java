@@ -59,7 +59,22 @@ public class TaskStatusController {
         TaskStatus statusToDelete = statusRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with id " + id + " not found for deletion"));
         
+        String statusName = statusToDelete.getStatusName();
+        
+        // Set all tasks using this status to null via gRPC
+        try {
+            ReassignStatusRequest request = ReassignStatusRequest.newBuilder()
+                .setOldStatusId(id)
+                .setNewStatusId(0) // 0 means set to null
+                .build();
+            
+            ReassignStatusResponse response = taskGrpcClient.reassignTasksWithStatus(request);
+            System.out.println("✓ gRPC: Unassigned status from " + response.getTasksModified() + " task(s)");
+        } catch (Exception e) {
+            System.out.println("⚠ Warning: Failed to unassign status from tasks: " + e.getMessage());
+        }
+        
         statusRepository.delete(statusToDelete);
-        System.out.println("Deleted status: " + statusToDelete.getStatusName());
+        System.out.println("✓ Deleted status: " + statusName);
     }
 }

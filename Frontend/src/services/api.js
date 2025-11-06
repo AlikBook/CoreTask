@@ -65,8 +65,9 @@ export default {
     updateStatus(id, status) {
         return api.put(`/statuses/${id}`, status);
     },
-    deleteStatus(id) {
-        return api.delete(`/statuses/${id}`);
+    deleteStatus(id, replacementId = null) {
+        const params = replacementId ? { replacementId } : {};
+        return api.delete(`/statuses/${id}`, { params });
     },
 
     // Categories
@@ -82,7 +83,8 @@ export default {
     updateCategory(id, category) {
         return api.put(`/categories/${id}`, category);
     },
-    deleteCategory(id) {
-        return api.delete(`/categories/${id}`);
+    deleteCategory(id, replacementId = null) {
+        const params = replacementId ? { replacementId } : {};
+        return api.delete(`/categories/${id}`, { params });
     }
 };

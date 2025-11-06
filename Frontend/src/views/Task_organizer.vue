@@ -123,13 +123,13 @@
                             <span v-else class="unassigned">Unassigned</span>
                         </td>
                         <td>
-                            <span class="status-badge" :class="'status-' + task.status?.statusId">
-                                {{ task.status?.statusName || '-' }}
+                            <span class="status-badge" :class="'status-' + task.statusId">
+                                {{ getStatusName(task.statusId) }}
                             </span>
                         </td>
                         <td>
                             <span class="category-badge">
-                                {{ task.category?.categoryName || '-' }}
+                                {{ getCategoryName(task.categoryId) }}
                             </span>
                         </td>
                         <td class="action-buttons">
@@ -264,42 +264,28 @@
 
 <script setup>
 const deleteStatus = async (statusId) => {
-    const tasksWithStatus = tasks.value.filter(task => task.status?.statusId === statusId);
+    if (!confirm('Are you sure you want to delete this status? Tasks using this status will have it set to null.')) return;
     
-    if (tasksWithStatus.length > 0) {
-
-        alert('Cannot delete a status that is assigned to a task');
-            return;
-        
-    } else {
-        // No tasks using this status, can delete directly
-        if (!confirm('Are you sure you want to delete this status?')) return;
-        
-        try {
-            await api.deleteStatus(statusId);
-            loadStatuses();
-        } catch (e) {
-            alert('Error deleting status: ' + (e.response?.data || e.message));
-        }
+    try {
+        await api.deleteStatus(statusId);
+        loadStatuses();
+        loadTasks(); // Refresh tasks to show updated status
+        alert('Status deleted successfully');
+    } catch (e) {
+        alert('Error deleting status: ' + (e.response?.data || e.message));
     }
 };
 
 const deleteCategory = async (categoryId) => {
-    const tasksWithCategory = tasks.value.filter(task => task.category?.categoryId === categoryId);
-    if (tasksWithCategory.length > 0) {
-        
-        alert('Cannot delete this category, it is assigned to a task (same database)');
-            
-        
-    } else {
-        if (!confirm('Are you sure you want to delete this category?')) return;
-        
-        try {
-            await api.deleteCategory(categoryId);
-            loadCategories();
-        } catch (e) {
-            alert('Error deleting category: ' + (e.response?.data || e.message));
-        }
+    if (!confirm('Are you sure you want to delete this category? Tasks using this category will have it set to null.')) return;
+    
+    try {
+        await api.deleteCategory(categoryId);
+        loadCategories();
+        loadTasks(); // Refresh tasks to show updated category
+        alert('Category deleted successfully');
+    } catch (e) {
+        alert('Error deleting category: ' + (e.response?.data || e.message));
     }
 };
 const showStatusModal = ref(false);
@@ -453,8 +439,8 @@ const openEditTaskModal = (task) => {
         description: task.description || '',
         dueDate: task.dueDate || '',
         workerId: task.workerId || null,
-        statusId: task.status?.statusId || null,
-        categoryId: task.category?.categoryId || null
+        statusId: task.statusId || null,
+        categoryId: task.categoryId || null
     };
     showTaskModal.value = true;
 };
@@ -470,8 +456,8 @@ const saveTask = async () => {
             description: taskForm.value.description,
             dueDate: taskForm.value.dueDate || null,
             workerId: taskForm.value.workerId || null,
-            status: taskForm.value.statusId ? { statusId: taskForm.value.statusId } : null,
-            category: taskForm.value.categoryId ? { categoryId: taskForm.value.categoryId } : null
+            statusId: taskForm.value.statusId || null,
+            categoryId: taskForm.value.categoryId || null
         };
 
         if (isEditMode.value) {
@@ -545,6 +531,16 @@ const deleteWorker = async (workerId) => {
 const getWorkerName = (workerId) => {
     const worker = workers.value.find(w => w.workerId === workerId);
     return worker ? `${worker.workerName} ${worker.workerLastName}` : 'Unknown';
+};
+
+const getStatusName = (statusId) => {
+    const status = statuses.value.find(s => s.statusId === statusId);
+    return status ? status.statusName : '-';
+};
+
+const getCategoryName = (categoryId) => {
+    const category = categories.value.find(c => c.categoryId === categoryId);
+    return category ? category.categoryName : '-';
 };
 
 

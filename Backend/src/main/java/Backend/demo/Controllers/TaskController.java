@@ -81,20 +81,18 @@ public class TaskController {
         }
         
         // Validate Status exists using JPA (same database)
-        if (task.getStatus() != null && task.getStatus().getStatusId() != null) {
-            TaskStatus status = statusRepository.findById(task.getStatus().getStatusId())
+        if (task.getStatusId() != null && task.getStatusId() != 0) {
+            TaskStatus status = statusRepository.findById(task.getStatusId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                    "Status with id " + task.getStatus().getStatusId() + " not found"));
-            task.setStatus(status);
+                    "Status with id " + task.getStatusId() + " not found"));
             System.out.println("✓ JPA: Status validated - " + status.getStatusName());
         }
         
         // Validate Category exists using JPA (same database)
-        if (task.getCategory() != null && task.getCategory().getCategoryId() != null) {
-            TaskCategory category = categoryRepository.findById(task.getCategory().getCategoryId())
+        if (task.getCategoryId() != null && task.getCategoryId() != 0) {
+            TaskCategory category = categoryRepository.findById(task.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                    "Category with id " + task.getCategory().getCategoryId() + " not found"));
-            task.setCategory(category);
+                    "Category with id " + task.getCategoryId() + " not found"));
             System.out.println("✓ JPA: Category validated - " + category.getCategoryName());
         }
         
@@ -131,18 +129,18 @@ public class TaskController {
                 }
                 
                 // Validate Status via JPA if being updated (same database)
-                if (updatedTask.getStatus() != null && updatedTask.getStatus().getStatusId() != null) {
-                    TaskStatus status = statusRepository.findById(updatedTask.getStatus().getStatusId())
+                if (updatedTask.getStatusId() != null && updatedTask.getStatusId() != 0) {
+                    TaskStatus status = statusRepository.findById(updatedTask.getStatusId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status not found"));
-                    existingTask.setStatus(status);
+                    existingTask.setStatusId(updatedTask.getStatusId());
                     System.out.println("✓ JPA: Status validated for update - " + status.getStatusName());
                 }
                 
                 // Validate Category via JPA if being updated (same database)
-                if (updatedTask.getCategory() != null && updatedTask.getCategory().getCategoryId() != null) {
-                    TaskCategory category = categoryRepository.findById(updatedTask.getCategory().getCategoryId())
+                if (updatedTask.getCategoryId() != null && updatedTask.getCategoryId() != 0) {
+                    TaskCategory category = categoryRepository.findById(updatedTask.getCategoryId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));
-                    existingTask.setCategory(category);
+                    existingTask.setCategoryId(updatedTask.getCategoryId());
                     System.out.println("✓ JPA: Category validated for update - " + category.getCategoryName());
                 }
                 
@@ -199,11 +197,11 @@ public class TaskController {
                 .setAction(action)
                 .setTaskName(task.getTaskName());
             
-            if (task.getStatus() != null) {
-                requestBuilder.setStatusId(task.getStatus().getStatusId());
+            if (task.getStatusId() != null && task.getStatusId() != 0) {
+                requestBuilder.setStatusId(task.getStatusId());
             }
-            if (task.getCategory() != null) {
-                requestBuilder.setCategoryId(task.getCategory().getCategoryId());
+            if (task.getCategoryId() != null && task.getCategoryId() != 0) {
+                requestBuilder.setCategoryId(task.getCategoryId());
             }
             
             String details = action + " task: " + task.getTaskName();

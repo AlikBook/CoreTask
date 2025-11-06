@@ -20,7 +20,7 @@ import java.util.Map;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackages = {"Backend.demo.Repositories.task", "Backend.demo.Repositories.dashboard"},
+    basePackages = {"Backend.demo.Repositories.task", "Backend.demo.Repositories.dashboard", "Backend.demo.Repositories.worker"},
     entityManagerFactoryRef = "taskEntityManagerFactory",
     transactionManagerRef = "taskTransactionManager"
 )
@@ -50,7 +50,7 @@ public class TaskDatabaseConfig {
         
         return builder
                 .dataSource(dataSource)
-                .packages("Backend.demo.Entities.task", "Backend.demo.Entities.dashboard")
+                .packages("Backend.demo.Entities.task", "Backend.demo.Entities.dashboard", "Backend.demo.Entities.worker")
                 .persistenceUnit("task")
                 .properties(properties)
                 .build();

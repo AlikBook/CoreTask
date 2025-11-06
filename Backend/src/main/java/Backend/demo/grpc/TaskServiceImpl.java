@@ -26,8 +26,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                 .setTaskName(task.getTaskName())
                 .setDescription(task.getDescription() != null ? task.getDescription() : "")
                 .setWorkerId(task.getWorkerId() != null ? task.getWorkerId() : 0)
-                .setStatusId(task.getStatus() != null ? task.getStatus().getStatusId() : 0)
-                .setCategoryId(task.getCategory() != null ? task.getCategory().getCategoryId() : 0)
+                .setStatusId(task.getStatusId() != null ? task.getStatusId() : 0)
+                .setCategoryId(task.getCategoryId() != null ? task.getCategoryId() : 0)
                 .build();
             responseBuilder.addTasks(taskResponse);
         }
@@ -48,8 +48,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                 .setTaskName(task.getTaskName())
                 .setDescription(task.getDescription() != null ? task.getDescription() : "")
                 .setWorkerId(task.getWorkerId() != null ? task.getWorkerId() : 0)
-                .setStatusId(task.getStatus() != null ? task.getStatus().getStatusId() : 0)
-                .setCategoryId(task.getCategory() != null ? task.getCategory().getCategoryId() : 0);
+                .setStatusId(task.getStatusId() != null ? task.getStatusId() : 0)
+                .setCategoryId(task.getCategoryId() != null ? task.getCategoryId() : 0);
         }
         
         responseObserver.onNext(responseBuilder.build());
@@ -91,14 +91,13 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         int modifiedCount = 0;
         
         for (Tasks task : tasks) {
-            if (task.getStatus() != null && task.getStatus().getStatusId().equals(oldStatusId)) {
-                // Create new status object with newStatusId
-                Backend.demo.Entities.task.TaskStatus newStatus = new Backend.demo.Entities.task.TaskStatus();
-                newStatus.setStatusId(newStatusId);
-                task.setStatus(newStatus);
+            if (task.getStatusId() != null && task.getStatusId().equals(oldStatusId)) {
+                // If newStatusId is 0, set to null (unassign)
+                task.setStatusId(newStatusId == 0 ? null : newStatusId);
                 tasksRepository.save(task);
                 modifiedCount++;
-                System.out.println("✓ gRPC: Reassigned task '" + task.getTaskName() + "' from status " + oldStatusId + " to " + newStatusId);
+                String action = newStatusId == 0 ? "unassigned from" : "reassigned from " + oldStatusId + " to";
+                System.out.println("✓ gRPC: Task '" + task.getTaskName() + "' " + action + " status " + (newStatusId == 0 ? oldStatusId : newStatusId));
             }
         }
         
@@ -120,14 +119,13 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         int modifiedCount = 0;
         
         for (Tasks task : tasks) {
-            if (task.getCategory() != null && task.getCategory().getCategoryId().equals(oldCategoryId)) {
-                // Create new category object with newCategoryId
-                Backend.demo.Entities.task.TaskCategory newCategory = new Backend.demo.Entities.task.TaskCategory();
-                newCategory.setCategoryId(newCategoryId);
-                task.setCategory(newCategory);
+            if (task.getCategoryId() != null && task.getCategoryId().equals(oldCategoryId)) {
+                // If newCategoryId is 0, set to null (unassign)
+                task.setCategoryId(newCategoryId == 0 ? null : newCategoryId);
                 tasksRepository.save(task);
                 modifiedCount++;
-                System.out.println("✓ gRPC: Reassigned task '" + task.getTaskName() + "' from category " + oldCategoryId + " to " + newCategoryId);
+                String action = newCategoryId == 0 ? "unassigned from" : "reassigned from " + oldCategoryId + " to";
+                System.out.println("✓ gRPC: Task '" + task.getTaskName() + "' " + action + " category " + (newCategoryId == 0 ? oldCategoryId : newCategoryId));
             }
         }
         

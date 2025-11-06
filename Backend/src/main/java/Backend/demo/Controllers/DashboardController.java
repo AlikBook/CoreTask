@@ -70,7 +70,7 @@ public class DashboardController {
         
         for (TaskStatus status : allStatuses) {
             long count = allTasks.stream()
-                .filter(task -> task.getStatus() != null && task.getStatus().getStatusId().equals(status.getStatusId()))
+                .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
                 .count();
             tasksByStatus.put(status.getStatusName(), count);
         }
@@ -82,7 +82,7 @@ public class DashboardController {
         
         for (TaskCategory category : allCategories) {
             long count = allTasks.stream()
-                .filter(task -> task.getCategory() != null && task.getCategory().getCategoryId().equals(category.getCategoryId()))
+                .filter(task -> task.getCategoryId() != null && task.getCategoryId().equals(category.getCategoryId()))
                 .count();
             tasksByCategory.put(category.getCategoryName(), count);
         }

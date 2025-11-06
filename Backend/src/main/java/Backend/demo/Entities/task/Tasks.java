@@ -5,8 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Tasks {
@@ -19,14 +17,8 @@ public class Tasks {
     private String description;
 
     private Integer workerId;
-    
-    @ManyToOne
-    @JoinColumn(name = "status_id")
-    private TaskStatus status;  
-    
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private TaskCategory category; 
+    private Integer statusId;
+    private Integer categoryId; 
 
     // getters and setters
 
@@ -70,19 +62,19 @@ public class Tasks {
         this.workerId = workerId;
     }
 
-    public TaskStatus getStatus() {
-        return status;
+    public Integer getStatusId() {
+        return statusId;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
     }
 
-    public TaskCategory getCategory() {
-        return category;
+    public Integer getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(TaskCategory category) {
-        this.category = category;
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 }
