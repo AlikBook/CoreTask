@@ -282,7 +282,7 @@ const deleteCategory = async (categoryId) => {
     try {
         await api.deleteCategory(categoryId);
         loadCategories();
-        loadTasks(); // Refresh tasks to show updated category
+        loadTasks(); 
         alert('Category deleted successfully');
     } catch (e) {
         alert('Error deleting category: ' + (e.response?.data || e.message));
@@ -296,7 +296,7 @@ const newCategoryName = ref("");
 const openStatusModal = () => {
     newStatusName.value = "";
     showStatusModal.value = true;
-    loadStatuses(); // Refresh status list when opening modal
+    loadStatuses(); 
 };
 const closeStatusModal = () => {
     showStatusModal.value = false;
