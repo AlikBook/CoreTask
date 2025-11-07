@@ -7,7 +7,6 @@ import Backend.demo.Repositories.task.TasksRepository;
 import Backend.demo.Repositories.task.StatusRepository;
 import Backend.demo.Repositories.task.TaskCategoryRepository;
 import Backend.demo.Repositories.dashboard.TaskHistoryRepository;
-import Backend.demo.Entities.dashboard.TaskHistory;
 import Backend.demo.grpc.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -30,8 +29,7 @@ public class TaskController {
     @Autowired
     private TaskCategoryRepository categoryRepository;
     
-    @Autowired
-    private TaskHistoryRepository taskHistoryRepository;
+    
     
     // gRPC client only for cross-database validation (Worker)
     private final WorkerServiceGrpc.WorkerServiceBlockingStub workerGrpcClient;
