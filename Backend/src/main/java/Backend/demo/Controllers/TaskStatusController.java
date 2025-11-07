@@ -61,11 +61,10 @@ public class TaskStatusController {
         
         String statusName = statusToDelete.getStatusName();
         
-        // Set all tasks using this status to null via gRPC
         try {
             ReassignStatusRequest request = ReassignStatusRequest.newBuilder()
                 .setOldStatusId(id)
-                .setNewStatusId(0) // 0 means set to null
+                .setNewStatusId(0) 
                 .build();
             
             ReassignStatusResponse response = taskGrpcClient.reassignTasksWithStatus(request);

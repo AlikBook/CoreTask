@@ -59,7 +59,6 @@ class TaskCategoryController {
         
         String categoryName = task_Category_to_delete.getCategoryName();
         
-        // Set all tasks using this category to null via gRPC
         try {
             ReassignCategoryRequest request = ReassignCategoryRequest.newBuilder()
                 .setOldCategoryId(id)

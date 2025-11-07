@@ -80,7 +80,6 @@ public class TaskController {
             System.out.println("ℹ Task created without assigned worker");
         }
         
-        // Validate Status exists using JPA (same database)
         if (task.getStatusId() != null && task.getStatusId() != 0) {
             TaskStatus status = statusRepository.findById(task.getStatusId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
@@ -88,7 +87,6 @@ public class TaskController {
             System.out.println("✓ JPA: Status validated - " + status.getStatusName());
         }
         
-        // Validate Category exists using JPA (same database)
         if (task.getCategoryId() != null && task.getCategoryId() != 0) {
             TaskCategory category = categoryRepository.findById(task.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, 
@@ -101,13 +99,7 @@ public class TaskController {
         // Notify dashboard via gRPC
         notifyDashboardTaskChange("CREATE", savedTask);
         
-        // Also save to history directly
-        String details = "Task created with ID: " + savedTask.getTaskId();
-        if (savedTask.getWorkerId() != null) {
-            details += ", assigned to worker " + savedTask.getWorkerId();
-        }
-        TaskHistory history = new TaskHistory("CREATE", savedTask.getTaskName(), details);
-        taskHistoryRepository.save(history);
+        
         
         return savedTask;
     }
@@ -154,10 +146,7 @@ public class TaskController {
                 // Notify dashboard via gRPC
                 notifyDashboardTaskChange("UPDATE", saved);
                 
-                // Save to history
-                String details = "Task updated";
-                TaskHistory history = new TaskHistory("UPDATE", saved.getTaskName(), details);
-                taskHistoryRepository.save(history);
+                
                 
                 return saved;
             })
@@ -185,9 +174,7 @@ public class TaskController {
             System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
         }
         
-        // Save to history
-        TaskHistory history = new TaskHistory("DELETE", taskName, "Task deleted with ID: " + id);
-        taskHistoryRepository.save(history);
+        
     }
     
     // Helper method to notify dashboard
