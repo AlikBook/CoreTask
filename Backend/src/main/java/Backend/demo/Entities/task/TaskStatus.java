@@ -13,7 +13,6 @@ public class TaskStatus {
     
     private String statusName;
     
-    // Getters and setters
     public Integer getStatusId() {
         return statusId;
     }

@@ -19,7 +19,6 @@ public class WorkerController {
     @Autowired
     private WorkerRepository workerRepository;
     
-    // gRPC client to check tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     private final DashboardServiceGrpc.DashboardServiceBlockingStub dashboardGrpcClient;
     
@@ -50,7 +49,6 @@ public class WorkerController {
     public Worker createWorker(@RequestBody Worker worker) {
         Worker savedWorker = workerRepository.save(worker);
         
-        // Notify dashboard via gRPC
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
                 .setAction("CREATE")
@@ -59,7 +57,7 @@ public class WorkerController {
                 .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
-            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+            System.out.println("Dashboard notification failed: " + e.getMessage());
         }
         
         return savedWorker;
@@ -72,7 +70,6 @@ public class WorkerController {
         
         String workerName = worker.getWorkerName() + " " + worker.getWorkerLastName();
         
-        // Unassign worker from all tasks via gRPC
         try {
             UnassignWorkerRequest request = UnassignWorkerRequest.newBuilder()
                 .setWorkerId(id)
@@ -90,7 +87,6 @@ public class WorkerController {
         
         workerRepository.deleteById(id);
         
-        // Notify dashboard via gRPC
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
                 .setAction("DELETE")
@@ -99,7 +95,7 @@ public class WorkerController {
                 .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
-            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+            System.out.println("Dashboard notification failed: " + e.getMessage());
         }
     }
 
@@ -113,5 +109,4 @@ public class WorkerController {
         })
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PUT | Worker with id :"+ id +" not found"));
     }
-
 }

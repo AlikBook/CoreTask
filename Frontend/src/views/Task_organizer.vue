@@ -2,7 +2,6 @@
     <div class="task-organizer-container">
         <h1 class="page-title">Task Organizer</h1>
 
-        <!-- Action Buttons -->
         <div class="action-bar">
             <button @click="openCreateTaskModal" class="btn-primary">
                 New Task +
@@ -10,18 +9,19 @@
             <button @click="openWorkerModal" class="btn-secondary">
                 Manage Workers
             </button>
+            
+            <button @click="openStatusModal" class="btn-secondary">
+                Manage Status
+            </button>
+
+            <button @click="openCategoryModal" class="btn-secondary">
+                Manage Category
+            </button>
+
             <button @click="loadTasks" class="btn-refresh">
                 Refresh
             </button>
 
-            <button @click="openStatusModal" class="btn-status-creation">
-                Manage Status
-            </button>
-
-            <button @click="openCategoryModal" class="btn-category-creation">
-                Manage Category
-            </button>
-        <!-- Create Status Modal -->
         <div v-if="showStatusModal" class="modal-overlay" @click.self="closeStatusModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -55,7 +55,6 @@
             </div>
         </div>
 
-        <!-- Create Category Modal -->
         <div v-if="showCategoryModal" class="modal-overlay" @click.self="closeCategoryModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -134,10 +133,10 @@
                         </td>
                         <td class="action-buttons">
                             <button @click="openEditTaskModal(task)" class="btn-edit" title="Edit">
-                                ✏️
+                                <FontAwesomeIcon icon="pen-to-square" />
                             </button>
                             <button @click="deleteTask(task.taskId)" class="btn-delete" title="Delete">
-                                🗑️
+                                <FontAwesomeIcon icon="trash" />
                             </button>
                         </td>
                     </tr>
@@ -145,7 +144,6 @@
             </table>
         </div>
 
-        <!-- Task Modal (Create/Edit) -->
         <div v-if="showTaskModal" class="modal-overlay" @click.self="closeTaskModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -207,7 +205,6 @@
             </div>
         </div>
 
-        <!-- Worker Modal -->
         <div v-if="showWorkerModal" class="modal-overlay" @click.self="closeWorkerModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -215,7 +212,6 @@
                     <button @click="closeWorkerModal" class="close-btn">✖</button>
                 </div>
                 <div class="modal-body">
-                    <!-- Create Worker Form -->
                     <div class="worker-create-section">
                         <h3>Add New Worker</h3>
                         <div class="form-row">
@@ -233,7 +229,6 @@
 
                     <hr class="divider" />
 
-                    <!-- Workers List -->
                     <div class="workers-list-section">
                         <h3>Existing Workers</h3>
                         <div v-if="workers.length === 0" class="no-data">
@@ -242,7 +237,7 @@
                         <div v-else class="workers-list">
                             <div v-for="worker in workers" :key="worker.workerId" class="worker-item">
                                 <div class="worker-info">
-                                    <span class="worker-icon">👤</span>
+                                    <span class="worker-icon"><FontAwesomeIcon icon="user" /></span>
                                     <span class="worker-name">
                                         {{ worker.workerName }} {{ worker.workerLastName }}
                                     </span>
@@ -263,13 +258,16 @@
 </template>
 
 <script setup>
+import { ref, onMounted, computed } from 'vue';
+import api from '../services/api';
+
 const deleteStatus = async (statusId) => {
     if (!confirm('Are you sure you want to delete this status? Tasks using this status will have it set to null.')) return;
     
     try {
         await api.deleteStatus(statusId);
         loadStatuses();
-        loadTasks(); // Refresh tasks to show updated status
+        loadTasks(); 
         alert('Status deleted successfully');
     } catch (e) {
         alert('Error deleting status: ' + (e.response?.data || e.message));
@@ -304,7 +302,7 @@ const closeStatusModal = () => {
 const openCategoryModal = () => {
     newCategoryName.value = "";
     showCategoryModal.value = true;
-    loadCategories(); // Refresh category list when opening modal
+    loadCategories(); 
 };
 const closeCategoryModal = () => {
     showCategoryModal.value = false;
@@ -317,7 +315,7 @@ const createStatus = async () => {
     }
     try {
         await api.createStatus({ statusName: newStatusName.value });
-        newStatusName.value = ""; // Clear input after creation
+        newStatusName.value = ""; 
         loadStatuses();
     } catch (e) {
         alert("Error creating status: " + (e.response?.data || e.message));
@@ -331,14 +329,14 @@ const createCategory = async () => {
     }
     try {
         await api.createCategory({ categoryName: newCategoryName.value });
-        newCategoryName.value = ""; // Clear input after creation
+        newCategoryName.value = ""; 
         loadCategories();
     } catch (e) {
         alert("Error creating category: " + (e.response?.data || e.message));
     }
 };
-import { ref, onMounted, computed } from 'vue';
-import api from '../services/api';
+
+
 
 const tasks = ref([]);
 const workers = ref([]);
@@ -366,7 +364,6 @@ const workerForm = ref({
     workerLastName: ''
 });
 
-// Load all data
 const loadTasks = async () => {
     try {
         loading.value = true;
@@ -416,7 +413,6 @@ const loadCategories = async () => {
     }
 };
 
-// Task Modal Functions
 const openCreateTaskModal = () => {
     isEditMode.value = false;
     taskForm.value = {
@@ -486,7 +482,6 @@ const deleteTask = async (taskId) => {
     }
 };
 
-// Worker Modal Functions
 const openWorkerModal = () => {
     workerForm.value = {
         workerName: '',
@@ -544,7 +539,6 @@ const getCategoryName = (categoryId) => {
 };
 
 
-//Status 
 
 const create_status = async (status_name)=>{
     try{
@@ -569,7 +563,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Status/Category Create Section Styles */
 .status-create-section, .category-create-section {
     margin-bottom: 30px;
 }
@@ -579,7 +572,6 @@ onMounted(() => {
     color: #333;
 }
 
-/* Status/Category Modal List Styles */
 .status-list, .category-list {
     display: flex;
     flex-direction: column;
@@ -716,23 +708,19 @@ onMounted(() => {
 }
 
 .btn-status-creation {
-    background: linear-gradient(135deg, #43e97b 0%, #38d66a 100%);
+    background:  #38d66a ;
     color: white;
 }
 
-.btn-status-creation:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
-}
+
 
 .btn-category-creation {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: #f5576c ;
     color: white;
 }
 
 .btn-category-creation:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
 }
 
 .loading, .error, .no-data {
@@ -758,7 +746,7 @@ onMounted(() => {
 }
 
 .tasks-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     color: white;
 }
 
@@ -808,13 +796,13 @@ onMounted(() => {
 }
 
 .status-badge {
-    background: #43e97b;
-    color: white;
+    
+    color: black;
 }
 
 .category-badge {
-    background: #f093fb;
-    color: white;
+    
+    color: black;
 }
 
 .action-buttons {
@@ -849,7 +837,6 @@ onMounted(() => {
     transform: scale(1.1);
 }
 
-/* Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -972,7 +959,6 @@ onMounted(() => {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-/* Worker Modal Specific */
 .worker-create-section {
     margin-bottom: 30px;
 }

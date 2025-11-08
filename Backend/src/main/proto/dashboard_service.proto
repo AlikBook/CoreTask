@@ -29,7 +29,7 @@ message TaskHistoryResponse {
 }
 
 message TaskChangeRequest {
-  string action = 1;  // CREATE, UPDATE, DELETE
+  string action = 1;  
   string taskName = 2;
   int32 statusId = 3;
   int32 categoryId = 4;
@@ -37,7 +37,7 @@ message TaskChangeRequest {
 }
 
 message WorkerChangeRequest {
-  string action = 1;  // CREATE, DELETE
+  string action = 1;  
   string workerName = 2;
   string details = 3;
 }

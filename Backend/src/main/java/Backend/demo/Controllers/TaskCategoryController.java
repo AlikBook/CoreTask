@@ -21,7 +21,6 @@ class TaskCategoryController {
     @Autowired
     private TaskCategoryRepository taskCategoryRepository;
     
-    // gRPC client to reassign tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     
     public TaskCategoryController() {

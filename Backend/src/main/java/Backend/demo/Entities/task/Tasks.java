@@ -20,8 +20,6 @@ public class Tasks {
     private Integer statusId;
     private Integer categoryId; 
 
-    // getters and setters
-
     public Integer getTaskId() {
         return taskId;
     }

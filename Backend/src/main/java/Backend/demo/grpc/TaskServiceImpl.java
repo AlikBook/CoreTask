@@ -60,7 +60,6 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     public void unassignWorkerFromTasks(UnassignWorkerRequest request, StreamObserver<UnassignWorkerResponse> responseObserver) {
         int workerId = request.getWorkerId();
         
-        // Find all tasks assigned to this worker
         List<Tasks> tasks = tasksRepository.findAll();
         int modifiedCount = 0;
         
@@ -69,7 +68,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                 task.setWorkerId(null);
                 tasksRepository.save(task);
                 modifiedCount++;
-                System.out.println("✓ gRPC: Unassigned worker " + workerId + " from task '" + task.getTaskName() + "'");
+                System.out.println("gRPC: Unassigned worker " + workerId + " from task '" + task.getTaskName() + "'");
             }
         }
         
@@ -86,18 +85,16 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         int oldStatusId = request.getOldStatusId();
         int newStatusId = request.getNewStatusId();
         
-        // Find all tasks with the old status
         List<Tasks> tasks = tasksRepository.findAll();
         int modifiedCount = 0;
         
         for (Tasks task : tasks) {
             if (task.getStatusId() != null && task.getStatusId().equals(oldStatusId)) {
-                // If newStatusId is 0, set to null (unassign)
                 task.setStatusId(newStatusId == 0 ? null : newStatusId);
                 tasksRepository.save(task);
                 modifiedCount++;
                 String action = newStatusId == 0 ? "unassigned from" : "reassigned from " + oldStatusId + " to";
-                System.out.println("✓ gRPC: Task '" + task.getTaskName() + "' " + action + " status " + (newStatusId == 0 ? oldStatusId : newStatusId));
+                System.out.println("gRPC: Task '" + task.getTaskName() + "' " + action + " status " + (newStatusId == 0 ? oldStatusId : newStatusId));
             }
         }
         
@@ -114,18 +111,16 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         int oldCategoryId = request.getOldCategoryId();
         int newCategoryId = request.getNewCategoryId();
         
-        // Find all tasks with the old category
         List<Tasks> tasks = tasksRepository.findAll();
         int modifiedCount = 0;
         
         for (Tasks task : tasks) {
             if (task.getCategoryId() != null && task.getCategoryId().equals(oldCategoryId)) {
-                // If newCategoryId is 0, set to null (unassign)
                 task.setCategoryId(newCategoryId == 0 ? null : newCategoryId);
                 tasksRepository.save(task);
                 modifiedCount++;
                 String action = newCategoryId == 0 ? "unassigned from" : "reassigned from " + oldCategoryId + " to";
-                System.out.println("✓ gRPC: Task '" + task.getTaskName() + "' " + action + " category " + (newCategoryId == 0 ? oldCategoryId : newCategoryId));
+                System.out.println("gRPC: Task '" + task.getTaskName() + "' " + action + " category " + (newCategoryId == 0 ? oldCategoryId : newCategoryId));
             }
         }
         
@@ -139,21 +134,18 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
 
     @Override
     public void createTask(CreateTaskRequest request, StreamObserver<TaskResponse> responseObserver) {
-        // This can be implemented if needed for full gRPC support
         responseObserver.onNext(TaskResponse.newBuilder().build());
         responseObserver.onCompleted();
     }
 
     @Override
     public void updateTask(UpdateTaskRequest request, StreamObserver<TaskResponse> responseObserver) {
-        // This can be implemented if needed for full gRPC support
         responseObserver.onNext(TaskResponse.newBuilder().build());
         responseObserver.onCompleted();
     }
 
     @Override
     public void deleteTask(TaskIdRequest request, StreamObserver<EmptyResponse> responseObserver) {
-        // This can be implemented if needed for full gRPC support
         responseObserver.onNext(EmptyResponse.newBuilder().build());
         responseObserver.onCompleted();
     }

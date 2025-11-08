@@ -19,7 +19,6 @@ public class TaskStatusController {
     @Autowired
     private StatusRepository statusRepository;
     
-    // gRPC client to check tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     
     public TaskStatusController() {
@@ -68,12 +67,12 @@ public class TaskStatusController {
                 .build();
             
             ReassignStatusResponse response = taskGrpcClient.reassignTasksWithStatus(request);
-            System.out.println("✓ gRPC: Unassigned status from " + response.getTasksModified() + " task(s)");
+            System.out.println("gRPC: Unassigned status from " + response.getTasksModified() + " task(s)");
         } catch (Exception e) {
-            System.out.println("⚠ Warning: Failed to unassign status from tasks: " + e.getMessage());
+            System.out.println("Warning: Failed to unassign status from tasks: " + e.getMessage());
         }
         
         statusRepository.delete(statusToDelete);
-        System.out.println("✓ Deleted status: " + statusName);
+        System.out.println("Deleted status: " + statusName);
     }
 }

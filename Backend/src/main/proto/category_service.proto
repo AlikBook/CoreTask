@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "CategoryServiceProto";
+
+import "common.proto";
+
+service CategoryService {
+  rpc GetCategoryById(CategoryIdRequest) returns (CategoryResponse);
+  rpc GetAllCategories(EmptyRequest) returns (CategoryListResponse);
+}
+
+message CategoryIdRequest {
+  int32 id = 1;
+}
+
+message CategoryResponse {
+  int32 id = 1;
+  string categoryName = 2;
+}
+
+message CategoryListResponse {
+  repeated CategoryResponse categories = 1;
+}

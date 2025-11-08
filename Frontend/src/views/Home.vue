@@ -8,12 +8,12 @@
         <div class="features-grid">
             <div class="feature-card">
                 <h3>Task Management</h3>
-                <p>Create, update, and organize tasks with ease. Assign workers, set categories, and track status.</p>
+                <p>Create, update, and organize tasks easily. Assign workers, set categories, and track status.</p>
             </div>
 
             <div class="feature-card">
                 <h3>Worker Assignment</h3>
-                <p>Manage workers and assign them to tasks. Workers are stored in a separate database using gRPC.</p>
+                <p>Manage workers and assign them to tasks.</p>
             </div>
 
             <div class="feature-card">
@@ -23,17 +23,23 @@
 
             <div class="feature-card">
                 <h3>Microservices Architecture</h3>
-                <p>Built with separate databases for tasks and workers, connected via gRPC for cross-database operations.</p>
+                <p>
+                Users can create and manage tasks, workers, statuses, and categories. While traditional database design relies on foreign keys to maintain relationships and handle cascade operations, our gRPC-based architecture enables robust CRUD functionality without concerns about cascade deletes or updates, ensuring flexibility and data integrity across services.
+                </p>
             </div>
 
             <div class="feature-card">
-                <h3>Activity History</h3>
-                <p>Track all operations with detailed history logs. See when tasks and workers are created, updated, or deleted.</p>
+                <h3>API Gateway</h3>
+                <p>
+                    The API Gateway serves as a unified entry point for all client requests, efficiently routing traffic to the appropriate backend services. It centralizes authentication, request validation, and CORS management, while providing enhanced security and scalability. This architecture simplifies client interactions and enables seamless integration across microservices.
+                </p>
             </div>
 
             <div class="feature-card">
-                <h3>Smart Validation</h3>
-                <p>Automatic validation using gRPC ensures data integrity across multiple databases.</p>
+                <h3>Docker & Cloud Native</h3>
+                <p>
+                    All services are containerized using Docker, enabling consistent and reliable deployments across any environment. Our architecture is cloud-native ready, supporting orchestration with Docker Compose and seamless migration to Kubernetes. This approach ensures scalability, portability, and simplified management for modern cloud platforms.
+                </p>
             </div>
         </div>
     </div>

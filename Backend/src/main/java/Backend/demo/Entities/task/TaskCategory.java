@@ -12,7 +12,6 @@ public class TaskCategory {
     private Integer categoryId;
     
     private String categoryName;
-    // getters and setters
 
     public Integer getCategoryId() {
         return categoryId;

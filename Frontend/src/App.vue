@@ -124,18 +124,7 @@ body {
   width: 100%;
 }
 
-/* Footer */
-.footer {
-  background: #2c3e50;
-  color: white;
-  text-align: center;
-  padding: 25px 20px;
-  margin-top: 50px;
-}
 
-.footer p {
-  font-size: 0.95rem;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {

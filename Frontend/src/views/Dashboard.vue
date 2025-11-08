@@ -53,7 +53,7 @@
                     </div>
                     <div v-else class="category-grid">
                         <div v-for="(count, category) in dashboardData.tasksByCategory" :key="category" class="category-item">
-                            <div class="category-circle" :style="{ background: getRandomGradient() }">
+                            <div class="category-circle" >
                                 <span class="category-count">{{ count }}</span>
                             </div>
                             <div class="category-name">{{ category }}</div>
@@ -72,7 +72,7 @@
                     <div v-else class="history-list">
                         <div v-for="item in dashboardData.recentHistory" :key="item.historyId" class="history-item">
                             <div class="history-icon" :class="getActionClass(item.action)">
-                                {{ getActionIcon(item.action) }}
+                                <FontAwesomeIcon :icon="getActionIcon(item.action)" />
                             </div>
                             <div class="history-content">
                                 <div class="history-action">
@@ -93,6 +93,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../services/api';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const dashboardData = ref({
     totalWorkers: 0,
@@ -123,29 +124,18 @@ const getPercentage = (count, total) => {
     return Math.round((count / total) * 100);
 };
 
-const getRandomGradient = () => {
-    const gradients = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
-    ];
-    return gradients[Math.floor(Math.random() * gradients.length)];
-};
+
 
 const getActionIcon = (action) => {
     const icons = {
-        'CREATE': '✅',
-        'UPDATE': '✏️',
-        'DELETE': '🗑️',
-        'CREATE_WORKER': '👤',
-        'DELETE_WORKER': '👋'
+        'CREATE': 'check',
+        'UPDATE': 'pen-to-square',
+        'DELETE': 'trash',
+        'CREATE_WORKER': 'user',
+        'DELETE_WORKER': 'user-slash'
     };
-    return icons[action] || '📝';
+    return icons[action] || 'file';
 };
-
 const getActionClass = (action) => {
     if (action.includes('CREATE')) return 'action-create';
     if (action.includes('UPDATE')) return 'action-update';
@@ -287,7 +277,7 @@ onMounted(() => {
 
 .bar {
     height: 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background:  #667eea;
     border-radius: 15px;
     transition: width 0.5s ease;
     min-width: 30px;
@@ -318,6 +308,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #667eea;
     color: white;
     font-size: 2rem;
     font-weight: 700;

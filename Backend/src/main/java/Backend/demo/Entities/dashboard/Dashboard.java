@@ -14,14 +14,12 @@ public class Dashboard {
     private Integer totalWorkers;
     private Integer totalTasks;
     
-    // These will be calculated on-the-fly from related entities
     
     public Dashboard() {
         this.totalWorkers = 0;
         this.totalTasks = 0;
     }
     
-    // Getters and setters
     public Integer getDashboardId() {
         return dashboardId;
     }

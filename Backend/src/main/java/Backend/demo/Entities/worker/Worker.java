@@ -14,7 +14,6 @@ public class Worker {
     private String workerName;
     private String workerLastName;
 
-    // getters and setters
     public Integer getWorkerId() {
         return workerId;
     }
