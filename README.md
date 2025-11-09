@@ -1,5 +1,10 @@
 ### Ivan Grandi SE 2025
 
+### GitHub Repository
+
+**URL:** [https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE](https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE)
+
+
 # Task Organizer - Microservices Application
 
 The project is a task management system built with microservices architecture, featuring REST APIs, gRPC communication, API Gateway, and containerized deployment. The main objective of the app is to help users to organize their tasks. They can do CRUD operations on them an even assign tasks to workers in the case of an ornaization. Some other features are implemented like task status and categories to imporve management. 
