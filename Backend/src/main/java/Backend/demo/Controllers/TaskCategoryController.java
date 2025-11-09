@@ -61,17 +61,17 @@ class TaskCategoryController {
         try {
             ReassignCategoryRequest request = ReassignCategoryRequest.newBuilder()
                 .setOldCategoryId(id)
-                .setNewCategoryId(0) // 0 means set to null
+                .setNewCategoryId(0)
                 .build();
             
             ReassignCategoryResponse response = taskGrpcClient.reassignTasksWithCategory(request);
-            System.out.println("✓ gRPC: Unassigned category from " + response.getTasksModified() + " task(s)");
+            System.out.println("gRPC: Unassigned category from " + response.getTasksModified() + " task(s)");
         } catch (Exception e) {
-            System.out.println("⚠ Warning: Failed to unassign category from tasks: " + e.getMessage());
+            System.out.println("Warning: Failed to unassign category from tasks: " + e.getMessage());
         }
         
         taskCategoryRepository.delete(task_Category_to_delete);
-        System.out.println("✓ Deleted category: " + categoryName);
+        System.out.println("Deleted category: " + categoryName);
     }
 
     @PutMapping("/id")
