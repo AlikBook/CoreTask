@@ -41,7 +41,7 @@ The project is a task management system built with microservices architecture, f
 1. **Clone the repository**
    ```bash
    git clone https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE.git
-   cd REST-GRPC-project
+   cd OOSD-project-Ivan-GRANDI-SE
    ```
 
 > **Note:**  
