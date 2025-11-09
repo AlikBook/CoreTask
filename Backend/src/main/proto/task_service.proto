@@ -13,6 +13,8 @@ service TaskService {
   rpc UpdateTask (UpdateTaskRequest) returns (TaskResponse);
   rpc DeleteTask (TaskIdRequest) returns (EmptyResponse);
   rpc UnassignWorkerFromTasks (UnassignWorkerRequest) returns (UnassignWorkerResponse);
+  rpc ReassignTasksWithStatus (ReassignStatusRequest) returns (ReassignStatusResponse);
+  rpc ReassignTasksWithCategory (ReassignCategoryRequest) returns (ReassignCategoryResponse);
 }
 
 message TaskListResponse {
@@ -51,5 +53,23 @@ message UnassignWorkerRequest {
 }
 
 message UnassignWorkerResponse {
+  int32 tasksModified = 1;
+}
+
+message ReassignStatusRequest {
+  int32 oldStatusId = 1;
+  int32 newStatusId = 2;
+}
+
+message ReassignStatusResponse {
+  int32 tasksModified = 1;
+}
+
+message ReassignCategoryRequest {
+  int32 oldCategoryId = 1;
+  int32 newCategoryId = 2;
+}
+
+message ReassignCategoryResponse {
   int32 tasksModified = 1;
 }

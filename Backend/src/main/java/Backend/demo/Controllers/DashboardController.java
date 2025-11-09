@@ -5,6 +5,7 @@ import Backend.demo.Entities.task.TaskCategory;
 import Backend.demo.Entities.task.TaskStatus;
 import Backend.demo.Entities.task.Tasks;
 import Backend.demo.Repositories.dashboard.TaskHistoryRepository;
+
 import Backend.demo.Repositories.task.TaskCategoryRepository;
 import Backend.demo.Repositories.task.StatusRepository;
 import Backend.demo.Repositories.task.TasksRepository;
@@ -22,7 +23,6 @@ import java.util.Map;
 @RequestMapping("/dashboard")
 public class DashboardController {
 
-    // NO direct access to WorkerRepository - use gRPC instead!
     private final WorkerServiceGrpc.WorkerServiceBlockingStub workerGrpcClient;
     
     @Autowired
@@ -35,10 +35,9 @@ public class DashboardController {
     private TaskCategoryRepository categoryRepository;
     
     @Autowired
-    private TaskHistoryRepository taskHistoryRepository;
+    private TaskHistoryRepository taskHistory_Repository;
     
     public DashboardController() {
-        // Create gRPC channel for Worker service (cross-database)
         ManagedChannel channel = ManagedChannelBuilder
             .forAddress("localhost", 9090)
             .usePlaintext()
@@ -50,14 +49,13 @@ public class DashboardController {
     public Map<String, Object> getDashboard() {
         Map<String, Object> dashboard = new HashMap<>();
         
-        // Count workers via gRPC (cross-database) ✨
         try {
             EmptyRequest request = EmptyRequest.newBuilder().build();
             WorkerListResponse workers = workerGrpcClient.getAllWorkers(request);
             dashboard.put("totalWorkers", workers.getWorkersCount());
-            System.out.println("✓ gRPC: Retrieved worker count: " + workers.getWorkersCount());
+            System.out.println("gRPC: Retrieved worker count: " + workers.getWorkersCount());
         } catch (Exception e) {
-            System.out.println("⚠ gRPC: Failed to get worker count: " + e.getMessage());
+            System.out.println("gRPC: Failed to get worker count: " + e.getMessage());
             dashboard.put("totalWorkers", 0);
         }
         
@@ -72,7 +70,7 @@ public class DashboardController {
         
         for (TaskStatus status : allStatuses) {
             long count = allTasks.stream()
-                .filter(task -> task.getStatus() != null && task.getStatus().getStatusId().equals(status.getStatusId()))
+                .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
                 .count();
             tasksByStatus.put(status.getStatusName(), count);
         }
@@ -84,14 +82,14 @@ public class DashboardController {
         
         for (TaskCategory category : allCategories) {
             long count = allTasks.stream()
-                .filter(task -> task.getCategory() != null && task.getCategory().getCategoryId().equals(category.getCategoryId()))
+                .filter(task -> task.getCategoryId() != null && task.getCategoryId().equals(category.getCategoryId()))
                 .count();
             tasksByCategory.put(category.getCategoryName(), count);
         }
         dashboard.put("tasksByCategory", tasksByCategory);
         
         // Get recent history
-        List<TaskHistory> recentHistory = taskHistoryRepository.findTop20ByOrderByTimestampDesc();
+        List<TaskHistory> recentHistory = taskHistory_Repository.findTop20ByOrderByTimestampDesc();
         dashboard.put("recentHistory", recentHistory);
         
         return dashboard;
@@ -99,6 +97,6 @@ public class DashboardController {
     
     @GetMapping("/history")
     public List<TaskHistory> getHistory() {
-        return taskHistoryRepository.findTop20ByOrderByTimestampDesc();
+        return taskHistory_Repository.findTop20ByOrderByTimestampDesc();
     }
 }

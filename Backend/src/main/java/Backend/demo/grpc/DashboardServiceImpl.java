@@ -21,7 +21,6 @@ import java.util.Map;
 @GrpcService
 public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceImplBase {
 
-    // NO direct access to WorkerRepository - use gRPC instead!
     private final WorkerServiceGrpc.WorkerServiceBlockingStub workerGrpcClient;
     
     @Autowired
@@ -37,7 +36,6 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
     private TaskHistoryRepository taskHistoryRepository;
     
     public DashboardServiceImpl() {
-        // Create gRPC channel for Worker service (cross-database)
         ManagedChannel channel = ManagedChannelBuilder
             .forAddress("localhost", 9090)
             .usePlaintext()
@@ -47,42 +45,38 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
 
     @Override
     public void getDashboard(EmptyRequest request, StreamObserver<DashboardResponse> responseObserver) {
-        // Count workers via gRPC (cross-database) ✨
         int totalWorkers = 0;
         try {
             EmptyRequest workerRequest = EmptyRequest.newBuilder().build();
             WorkerListResponse workers = workerGrpcClient.getAllWorkers(workerRequest);
             totalWorkers = workers.getWorkersCount();
-            System.out.println("✓ gRPC: Dashboard retrieved worker count: " + totalWorkers);
+            System.out.println("gRPC: Dashboard retrieved worker count: " + totalWorkers);
         } catch (Exception e) {
-            System.out.println("⚠ gRPC: Failed to get worker count for dashboard: " + e.getMessage());
+            System.out.println("gRPC: Failed to get worker count for dashboard: " + e.getMessage());
         }
         
-        // Count tasks
         long totalTasks = tasksRepository.count();
         List<Tasks> allTasks = tasksRepository.findAll();
         
-        // Tasks by status
         Map<String, Integer> tasksByStatus = new HashMap<>();
+
         List<TaskStatus> allStatuses = statusRepository.findAll();
         for (TaskStatus status : allStatuses) {
             long count = allTasks.stream()
-                .filter(task -> task.getStatus() != null && task.getStatus().getStatusId().equals(status.getStatusId()))
+                .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
                 .count();
             tasksByStatus.put(status.getStatusName(), (int) count);
         }
         
-        // Tasks by category
         Map<String, Integer> tasksByCategory = new HashMap<>();
         List<TaskCategory> allCategories = categoryRepository.findAll();
         for (TaskCategory category : allCategories) {
             long count = allTasks.stream()
-                .filter(task -> task.getCategory() != null && task.getCategory().getCategoryId().equals(category.getCategoryId()))
+                .filter(task -> task.getCategoryId() != null && task.getCategoryId().equals(category.getCategoryId()))
                 .count();
             tasksByCategory.put(category.getCategoryName(), (int) count);
         }
         
-        // Get recent history
         List<TaskHistory> recentHistory = taskHistoryRepository.findTop20ByOrderByTimestampDesc();
         
         DashboardResponse.Builder responseBuilder = DashboardResponse.newBuilder()
@@ -108,7 +102,6 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
 
     @Override
     public void notifyTaskChange(TaskChangeRequest request, StreamObserver<EmptyResponse> responseObserver) {
-        // Create history entry
         String details = request.getDetails();
         if (details == null || details.isEmpty()) {
             details = request.getAction() + " task: " + request.getTaskName();
@@ -117,7 +110,7 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         TaskHistory history = new TaskHistory(request.getAction(), request.getTaskName(), details);
         taskHistoryRepository.save(history);
         
-        System.out.println("📊 Dashboard: Task " + request.getAction() + " - " + request.getTaskName());
+        System.out.println("Dashboard: Task " + request.getAction() + " - " + request.getTaskName());
         
         responseObserver.onNext(EmptyResponse.newBuilder().build());
         responseObserver.onCompleted();
@@ -125,7 +118,6 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
 
     @Override
     public void notifyWorkerChange(WorkerChangeRequest request, StreamObserver<EmptyResponse> responseObserver) {
-        // Create history entry for worker changes (optional)
         String details = request.getDetails();
         if (details == null || details.isEmpty()) {
             details = request.getAction() + " worker: " + request.getWorkerName();
@@ -134,7 +126,7 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         TaskHistory history = new TaskHistory(request.getAction() + "_WORKER", request.getWorkerName(), details);
         taskHistoryRepository.save(history);
         
-        System.out.println("📊 Dashboard: Worker " + request.getAction() + " - " + request.getWorkerName());
+        System.out.println("Dashboard: Worker " + request.getAction() + " - " + request.getWorkerName());
         
         responseObserver.onNext(EmptyResponse.newBuilder().build());
         responseObserver.onCompleted();

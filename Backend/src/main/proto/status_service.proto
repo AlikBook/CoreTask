@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "Backend.demo.grpc";
+option java_outer_classname = "StatusServiceProto";
+
+import "common.proto";
+
+service StatusService {
+  rpc GetStatusById(StatusIdRequest) returns (StatusResponse);
+  rpc GetAllStatuses(EmptyRequest) returns (StatusListResponse);
+}
+
+message StatusIdRequest {
+  int32 id = 1;
+}
+
+message StatusResponse {
+  int32 id = 1;
+  string statusName = 2;
+}
+
+message StatusListResponse {
+  repeated StatusResponse statuses = 1;
+}

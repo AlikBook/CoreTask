@@ -12,7 +12,7 @@ public class TaskHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer historyId;
     
-    private String action; // CREATE, UPDATE, DELETE
+    private String action; 
     private String taskName;
     private LocalDateTime timestamp;
     private String details;
@@ -28,7 +28,6 @@ public class TaskHistory {
         this.timestamp = LocalDateTime.now();
     }
     
-    // Getters and setters
     public Integer getHistoryId() {
         return historyId;
     }

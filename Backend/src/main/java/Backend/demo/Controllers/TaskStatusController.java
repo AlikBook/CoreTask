@@ -5,6 +5,7 @@ import Backend.demo.Repositories.task.StatusRepository;
 import Backend.demo.grpc.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +19,6 @@ public class TaskStatusController {
     @Autowired
     private StatusRepository statusRepository;
     
-    // gRPC client to check tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     
     public TaskStatusController() {
@@ -55,28 +55,24 @@ public class TaskStatusController {
 
     @DeleteMapping("/{id}")
     public void deleteStatus(@PathVariable Integer id) {
-        if (!statusRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with id " + id + " not found for deletion");
-        }
+        TaskStatus statusToDelete = statusRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with id " + id + " not found for deletion"));
         
-        // Check via gRPC if status is being used by tasks
+        String statusName = statusToDelete.getStatusName();
+        
         try {
-            EmptyRequest request = EmptyRequest.newBuilder().build();
-            TaskListResponse tasks = taskGrpcClient.getAllTasks(request);
+            ReassignStatusRequest request = ReassignStatusRequest.newBuilder()
+                .setOldStatusId(id)
+                .setNewStatusId(0) 
+                .build();
             
-            long taskCount = tasks.getTasksList().stream()
-                .filter(task -> task.getStatusId() == id)
-                .count();
-            
-            if (taskCount > 0) {
-                System.out.println("⚠ gRPC: Status is used by " + taskCount + " task(s), but proceeding with deletion");
-            } else {
-                System.out.println("✓ gRPC: Status is not used by any tasks, safe to delete");
-            }
+            ReassignStatusResponse response = taskGrpcClient.reassignTasksWithStatus(request);
+            System.out.println("gRPC: Unassigned status from " + response.getTasksModified() + " task(s)");
         } catch (Exception e) {
-            System.out.println("⚠ gRPC check failed, proceeding with deletion anyway");
+            System.out.println("Warning: Failed to unassign status from tasks: " + e.getMessage());
         }
         
-        statusRepository.deleteById(id);
+        statusRepository.delete(statusToDelete);
+        System.out.println("Deleted status: " + statusName);
     }
 }

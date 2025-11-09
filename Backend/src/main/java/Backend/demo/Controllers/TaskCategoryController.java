@@ -1,7 +1,6 @@
 package Backend.demo.Controllers;
 
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -15,13 +14,13 @@ import Backend.demo.grpc.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+
 @RestController
 @RequestMapping("/categories")
 class TaskCategoryController {
     @Autowired
     private TaskCategoryRepository taskCategoryRepository;
     
-    // gRPC client to check tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     
     public TaskCategoryController() {
@@ -31,13 +30,12 @@ class TaskCategoryController {
             .build();
         this.taskGrpcClient = TaskServiceGrpc.newBlockingStub(channel);
     }
+    
 
     @GetMapping
     public List<TaskCategory> get_tasks_categories(){
         List<TaskCategory> tasks_categories = taskCategoryRepository.findAll();
-        if(tasks_categories.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | No categories found");
-        }
+    
         return tasks_categories;
     }
 
@@ -54,30 +52,26 @@ class TaskCategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete_category(@PathVariable Integer id ){
-        if(!taskCategoryRepository.existsById(id)){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"DELETE | category not found");
-        }
+    public void delete_category(@PathVariable Integer id) {
+        TaskCategory task_Category_to_delete = taskCategoryRepository.findById(id)
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
         
-        // Check via gRPC if category is being used by tasks
+        String categoryName = task_Category_to_delete.getCategoryName();
+        
         try {
-            EmptyRequest request = EmptyRequest.newBuilder().build();
-            TaskListResponse tasks = taskGrpcClient.getAllTasks(request);
+            ReassignCategoryRequest request = ReassignCategoryRequest.newBuilder()
+                .setOldCategoryId(id)
+                .setNewCategoryId(0) // 0 means set to null
+                .build();
             
-            long taskCount = tasks.getTasksList().stream()
-                .filter(task -> task.getCategoryId() == id)
-                .count();
-            
-            if (taskCount > 0) {
-                System.out.println("⚠ gRPC: Category is used by " + taskCount + " task(s), but proceeding with deletion");
-            } else {
-                System.out.println("✓ gRPC: Category is not used by any tasks, safe to delete");
-            }
+            ReassignCategoryResponse response = taskGrpcClient.reassignTasksWithCategory(request);
+            System.out.println("✓ gRPC: Unassigned category from " + response.getTasksModified() + " task(s)");
         } catch (Exception e) {
-            System.out.println("⚠ gRPC check failed, proceeding with deletion anyway");
+            System.out.println("⚠ Warning: Failed to unassign category from tasks: " + e.getMessage());
         }
         
-        taskCategoryRepository.deleteById(id);
+        taskCategoryRepository.delete(task_Category_to_delete);
+        System.out.println("✓ Deleted category: " + categoryName);
     }
 
     @PutMapping("/id")

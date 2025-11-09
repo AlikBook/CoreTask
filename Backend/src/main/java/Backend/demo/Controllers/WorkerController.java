@@ -19,7 +19,6 @@ public class WorkerController {
     @Autowired
     private WorkerRepository workerRepository;
     
-    // gRPC client to check tasks
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     private final DashboardServiceGrpc.DashboardServiceBlockingStub dashboardGrpcClient;
     
@@ -36,9 +35,7 @@ public class WorkerController {
     @GetMapping
     public List<Worker> getWorkers() {
         List<Worker> worker_list = workerRepository.findAll();
-        if(worker_list.size() == 0){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | No workers found");
-        }
+        
         return worker_list;        
     }
 
@@ -52,7 +49,6 @@ public class WorkerController {
     public Worker createWorker(@RequestBody Worker worker) {
         Worker savedWorker = workerRepository.save(worker);
         
-        // Notify dashboard via gRPC
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
                 .setAction("CREATE")
@@ -61,7 +57,7 @@ public class WorkerController {
                 .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
-            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+            System.out.println("Dashboard notification failed: " + e.getMessage());
         }
         
         return savedWorker;
@@ -74,7 +70,6 @@ public class WorkerController {
         
         String workerName = worker.getWorkerName() + " " + worker.getWorkerLastName();
         
-        // Unassign worker from all tasks via gRPC
         try {
             UnassignWorkerRequest request = UnassignWorkerRequest.newBuilder()
                 .setWorkerId(id)
@@ -82,17 +77,16 @@ public class WorkerController {
             UnassignWorkerResponse response = taskGrpcClient.unassignWorkerFromTasks(request);
             
             if (response.getTasksModified() > 0) {
-                System.out.println("✓ gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
+                System.out.println("gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
             } else {
-                System.out.println("✓ gRPC: Worker has no assigned tasks");
+                System.out.println("gRPC: Worker has no assigned tasks");
             }
         } catch (Exception e) {
-            System.out.println("⚠ gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
+            System.out.println("gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
         }
         
         workerRepository.deleteById(id);
         
-        // Notify dashboard via gRPC
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
                 .setAction("DELETE")
@@ -101,7 +95,7 @@ public class WorkerController {
                 .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
-            System.out.println("⚠ Dashboard notification failed: " + e.getMessage());
+            System.out.println("Dashboard notification failed: " + e.getMessage());
         }
     }
 
@@ -115,5 +109,4 @@ public class WorkerController {
         })
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PUT | Worker with id :"+ id +" not found"));
     }
-
 }
