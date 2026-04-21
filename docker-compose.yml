@@ -15,9 +15,7 @@ services:
       SPRING_H2_CONSOLE_ENABLED: ${SPRING_H2_CONSOLE_ENABLED:-true}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
       SPRING_JPA_DATABASE_PLATFORM: ${SPRING_JPA_DATABASE_PLATFORM:-org.hibernate.dialect.H2Dialect}
-    ports:
-      - "${BACKEND_HOST_PORT:-8080}:${BACKEND_SERVER_PORT:-8080}"
-      - "${BACKEND_GRPC_HOST_PORT:-9090}:${BACKEND_GRPC_SERVER_PORT:-9090}"
+    
   gateway:
     build:
       context: ./Gateway
@@ -25,7 +23,7 @@ services:
         APP_PORT: ${GATEWAY_SERVER_PORT:-8081}
     environment:
       SERVER_PORT: ${GATEWAY_SERVER_PORT:-8081}
-      BACKEND_SERVICE_URL: ${BACKEND_SERVICE_URL:-http://backend:8080}
+      BACKEND_SERVICE_URL: http://backend:${BACKEND_SERVER_PORT:-8080}
       API_PATH_PATTERN: ${API_PATH_PATTERN:-/api/**}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
       CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
@@ -33,3 +31,4 @@ services:
       - "${GATEWAY_HOST_PORT:-8081}:${GATEWAY_SERVER_PORT:-8081}"
     depends_on:
       - backend
+    restart: always
