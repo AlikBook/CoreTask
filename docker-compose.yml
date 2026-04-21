@@ -1,17 +1,35 @@
 services:
   backend:
-    build: ./Backend
+    build:
+      context: ./Backend
+      args:
+        APP_PORT: ${BACKEND_SERVER_PORT:-8080}
+        GRPC_PORT: ${BACKEND_GRPC_SERVER_PORT:-9090}
+    environment:
+      SERVER_PORT: ${BACKEND_SERVER_PORT:-8080}
+      GRPC_SERVER_PORT: ${BACKEND_GRPC_SERVER_PORT:-9090}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:h2:mem:appdb}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:-org.h2.Driver}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-}
+      SPRING_H2_CONSOLE_ENABLED: ${SPRING_H2_CONSOLE_ENABLED:-true}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      SPRING_JPA_DATABASE_PLATFORM: ${SPRING_JPA_DATABASE_PLATFORM:-org.hibernate.dialect.H2Dialect}
     ports:
-      - "8080:8080"
+      - "${BACKEND_HOST_PORT:-8080}:${BACKEND_SERVER_PORT:-8080}"
+      - "${BACKEND_GRPC_HOST_PORT:-9090}:${BACKEND_GRPC_SERVER_PORT:-9090}"
   gateway:
-    build: ./Gateway
+    build:
+      context: ./Gateway
+      args:
+        APP_PORT: ${GATEWAY_SERVER_PORT:-8081}
+    environment:
+      SERVER_PORT: ${GATEWAY_SERVER_PORT:-8081}
+      BACKEND_SERVICE_URL: ${BACKEND_SERVICE_URL:-http://backend:8080}
+      API_PATH_PATTERN: ${API_PATH_PATTERN:-/api/**}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
     ports:
-      - "8081:8081"
+      - "${GATEWAY_HOST_PORT:-8081}:${GATEWAY_SERVER_PORT:-8081}"
     depends_on:
       - backend
-  frontend:
-    build: ./Frontend
-    ports:
-      - "5173:80"
-    depends_on:
-      - gateway
