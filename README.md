@@ -2,16 +2,16 @@
 
 ### GitHub Repository
 
-**URL:** [https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE](https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE)
-
+**URL:** [https://github.com/AlikBook/CoreTask.git](https://github.com/AlikBook/CoreTask.git)
 
 # Task Organizer - Microservices Application
 
-The project is a task management system built with microservices architecture, featuring REST APIs, gRPC communication, API Gateway, and containerized deployment. The main objective of the app is to help users to organize their tasks. They can do CRUD operations on them an even assign tasks to workers in the case of an ornaization. Some other features are implemented like task status and categories to imporve management. 
+The project is a task management system built with microservices architecture, featuring REST APIs, gRPC communication, API Gateway, and containerized deployment. The main objective of the app is to help users to organize their tasks. They can do CRUD operations on them an even assign tasks to workers in the case of an ornaization. Some other features are implemented like task status and categories to imporve management.
 
 ## Features
 
 ### Architecture & Technologies
+
 - **Microservices Architecture**: Modular backend services with API Gateway pattern
 - **RESTful API**: Full CRUD operations for tasks, workers, statuses, and categories
 - **gRPC Communication**: Inter-service communication
@@ -22,13 +22,13 @@ The project is a task management system built with microservices architecture, f
 - **Cloud-Native**: Multi-stage builds, orchestration support
 
 ### Core Functionality
+
 - **Task Management**: Create, update, delete, and organize tasks
 - **Worker Assignment**: Manage workers and assign them to tasks
 - **Status Tracking**: Custom task statuses with real-time updates
 - **Category Organization**: Categorize tasks for better organization
 - **Real-time Dashboard**: View statistics and recent activity
 - **Activity History**: Track all changes to tasks and workers
-
 
 ## Prerequisites
 
@@ -45,8 +45,8 @@ The project is a task management system built with microservices architecture, f
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/AlikBook/OOSD-project-Ivan-GRANDI-SE.git
-   cd OOSD-project-Ivan-GRANDI-SE
+   git clone https://github.com/AlikBook/CoreTask.git
+   cd CoreTask
    ```
 
 > **Note:**  
@@ -61,10 +61,10 @@ The project is a task management system built with microservices architecture, f
 > This step is only needed for development visuals; it is not required when running the application with Docker Compose.
 
 2. **Build and start all services**
+
    ```bash
    docker-compose up --build
    ```
-
 
 3. **Access the application**
    - Frontend: http://localhost:5173
@@ -81,11 +81,13 @@ The project is a task management system built with microservices architecture, f
 For frontend development with live reload:
 
 1. **Start backend services only**
+
    ```bash
    docker-compose up backend gateway
    ```
 
 2. **Run frontend locally** (in a separate terminal)
+
    ```bash
    cd Frontend
    npm install
@@ -96,11 +98,10 @@ For frontend development with live reload:
    - Frontend: http://localhost:5173
    - API Gateway: http://localhost:8081
 
-
-
 ## API Endpoints
 
 ### Tasks
+
 - `GET /api/tasks` - Get all tasks
 - `GET /api/tasks/{id}` - Get task by ID
 - `POST /api/tasks` - Create new task
@@ -108,6 +109,7 @@ For frontend development with live reload:
 - `DELETE /api/tasks/{id}` - Delete task
 
 ### Workers
+
 - `GET /api/workers` - Get all workers
 - `GET /api/workers/{id}` - Get worker by ID
 - `POST /api/workers` - Create new worker
@@ -115,6 +117,7 @@ For frontend development with live reload:
 - `DELETE /api/workers/{id}` - Delete worker
 
 ### Statuses
+
 - `GET /api/task-statuses` - Get all statuses
 - `GET /api/task-statuses/{id}` - Get status by ID
 - `POST /api/task-statuses` - Create new status
@@ -122,6 +125,7 @@ For frontend development with live reload:
 - `DELETE /api/task-statuses/{id}` - Delete status
 
 ### Categories
+
 - `GET /api/task-categories` - Get all categories
 - `GET /api/task-categories/{id}` - Get category by ID
 - `POST /api/task-categories` - Create new category
@@ -129,6 +133,7 @@ For frontend development with live reload:
 - `DELETE /api/task-categories/{id}` - Delete category
 
 ### Dashboard
+
 - `GET /api/dashboard` - Get dashboard statistics
 
 ---
@@ -136,19 +141,25 @@ For frontend development with live reload:
 ## Configuration
 
 ### Backend Configuration
+
 Located in `Backend/src/main/resources/application.properties`:
+
 - Database: H2 in-memory (jdbc:h2:mem:appdb)
 - Server port: 8080
 - gRPC port: 9090
 
 ### Gateway Configuration
+
 Located in `Gateway/src/main/resources/application.properties`:
+
 - Server port: 8081
 - Backend route: http://backend:8080 (Docker) or http://localhost:8080 (local)
 - CORS: http://localhost:5173
 
 ### Frontend Configuration
+
 Located in `Frontend/src/services/api.js`:
+
 - API base URL: http://localhost:8081/api
 
 ---
@@ -156,15 +167,18 @@ Located in `Frontend/src/services/api.js`:
 ## Docker Configuration
 
 ### Backend Dockerfile
+
 - Base image: eclipse-temurin:21-jdk (Debian-based for glibc support)
 - Multi-stage build: Build stage + Runtime stage
 - Automatic Gradle build inside container
 
 ### Gateway Dockerfile
+
 - Base image: eclipse-temurin:21-jdk
 - Multi-stage build for optimized image size
 
 ### Frontend Dockerfile
+
 - Build stage: Node.js 22
 - Runtime stage: nginx:alpine
 - Serves static built files
@@ -176,18 +190,21 @@ Located in `Frontend/src/services/api.js`:
 ### Building Manually
 
 **Backend:**
+
 ```bash
 cd Backend
 ./gradlew clean build --no-daemon
 ```
 
 **Gateway:**
+
 ```bash
 cd Gateway
 ./gradlew clean build --no-daemon
 ```
 
 **Frontend:**
+
 ```bash
 cd Frontend
 npm install
@@ -197,6 +214,7 @@ npm run build
 ### Running Tests
 
 **Backend:**
+
 ```bash
 cd Backend
 ./gradlew test
@@ -231,7 +249,9 @@ The application uses a single H2 in-memory database with the following entities:
 **Note**: The application uses integer IDs instead of JPA foreign keys, with validation handled via gRPC calls.
 
 ### Database Access
+
 H2 Console: http://localhost:8080/h2-console
+
 - JDBC URL: `jdbc:h2:mem:appdb`
 - User: `sa`
 - Password: (empty)
@@ -260,8 +280,3 @@ When creating or updating a task:
    - All entities exist → Task is saved
    - Entity not found → HTTP 400 error with descriptive message
 4. **Dashboard Notification**: On success, `DashboardService.notifyTaskChange()` is called via gRPC
-
-
-
-
-
