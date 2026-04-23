@@ -1,6 +1,7 @@
 services:
   core-task-backend:
     container_name: core-task-backend
+    image: core-task-backend:latest
     build:
       context: ./Backend
       args:
@@ -19,6 +20,7 @@ services:
     
   core-task-gateway:
     container_name: core-task-gateway
+    image: core-task-gateway:latest
     build:
       context: ./Gateway
       args:
