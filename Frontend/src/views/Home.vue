@@ -1,7 +1,7 @@
 <template>
     <div class="home-container">
         <div class="hero-section">
-            <h1 class="main-title">The Task Organizer</h1>
+            <h1 class="main-title">Core Task</h1>
             <p class="subtitle">Manage your tasks efficiently</p>
         </div>
 

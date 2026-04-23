@@ -7,7 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <nav class="navbar">
       <div class="nav-container">
         <div class="nav-brand">
-          <span class="brand-text">Task Manager</span>
+          <span class="brand-text">Core Task</span>
         </div>
         
         <div class="nav-links">
