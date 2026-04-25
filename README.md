@@ -1,10 +1,6 @@
-### Ivan Grandi SE 2025
+# CORE TASK : Task Organizer - Microservices Application
 
-### GitHub Repository
-
-**URL:** [https://github.com/AlikBook/CoreTask.git](https://github.com/AlikBook/CoreTask.git)
-
-# Task Organizer - Microservices Application
+> **🚀 Live Demo:** [core-task.vercel.app](https://core-task.vercel.app/)
 
 The project is a task management system built with microservices architecture, featuring REST APIs, gRPC communication, API Gateway, and containerized deployment. The main objective of the app is to help users to organize their tasks. They can do CRUD operations on them an even assign tasks to workers in the case of an ornaization. Some other features are implemented like task status and categories to imporve management.
 
