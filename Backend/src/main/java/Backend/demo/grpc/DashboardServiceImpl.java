@@ -22,24 +22,24 @@ import java.util.Map;
 public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceImplBase {
 
     private final WorkerServiceGrpc.WorkerServiceBlockingStub workerGrpcClient;
-    
+
     @Autowired
     private TasksRepository tasksRepository;
-    
+
     @Autowired
     private StatusRepository statusRepository;
-    
+
     @Autowired
     private TaskCategoryRepository categoryRepository;
-    
+
     @Autowired
     private TaskHistoryRepository taskHistoryRepository;
-    
+
     public DashboardServiceImpl() {
         ManagedChannel channel = ManagedChannelBuilder
-            .forAddress("localhost", 9090)
-            .usePlaintext()
-            .build();
+                .forAddress("localhost", 9090)
+                .usePlaintext()
+                .build();
         this.workerGrpcClient = WorkerServiceGrpc.newBlockingStub(channel);
     }
 
@@ -54,48 +54,49 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         } catch (Exception e) {
             System.out.println("gRPC: Failed to get worker count for dashboard: " + e.getMessage());
         }
-        
+
         long totalTasks = tasksRepository.count();
         List<Tasks> allTasks = tasksRepository.findAll();
-        
+
         Map<String, Integer> tasksByStatus = new HashMap<>();
 
         List<TaskStatus> allStatuses = statusRepository.findAll();
         for (TaskStatus status : allStatuses) {
             long count = allTasks.stream()
-                .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
-                .count();
+                    .filter(task -> task.getStatusId() != null && task.getStatusId().equals(status.getStatusId()))
+                    .count();
             tasksByStatus.put(status.getStatusName(), (int) count);
         }
-        
+
         Map<String, Integer> tasksByCategory = new HashMap<>();
         List<TaskCategory> allCategories = categoryRepository.findAll();
         for (TaskCategory category : allCategories) {
             long count = allTasks.stream()
-                .filter(task -> task.getCategoryId() != null && task.getCategoryId().equals(category.getCategoryId()))
-                .count();
+                    .filter(task -> task.getCategoryId() != null
+                            && task.getCategoryId().equals(category.getCategoryId()))
+                    .count();
             tasksByCategory.put(category.getCategoryName(), (int) count);
         }
-        
+
         List<TaskHistory> recentHistory = taskHistoryRepository.findTop20ByOrderByTimestampDesc();
-        
+
         DashboardResponse.Builder responseBuilder = DashboardResponse.newBuilder()
-            .setTotalWorkers(totalWorkers)
-            .setTotalTasks((int) totalTasks)
-            .putAllTasksByStatus(tasksByStatus)
-            .putAllTasksByCategory(tasksByCategory);
-        
+                .setTotalWorkers(totalWorkers)
+                .setTotalTasks((int) totalTasks)
+                .putAllTasksByStatus(tasksByStatus)
+                .putAllTasksByCategory(tasksByCategory);
+
         for (TaskHistory history : recentHistory) {
             TaskHistoryResponse historyResponse = TaskHistoryResponse.newBuilder()
-                .setId(history.getHistoryId())
-                .setAction(history.getAction())
-                .setTaskName(history.getTaskName())
-                .setTimestamp(history.getTimestamp().toString())
-                .setDetails(history.getDetails() != null ? history.getDetails() : "")
-                .build();
+                    .setId(history.getHistoryId())
+                    .setAction(history.getAction())
+                    .setTaskName(history.getTaskName())
+                    .setTimestamp(history.getTimestamp().toString())
+                    .setDetails(history.getDetails() != null ? history.getDetails() : "")
+                    .build();
             responseBuilder.addRecentHistory(historyResponse);
         }
-        
+
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
     }
@@ -106,12 +107,22 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         if (details == null || details.isEmpty()) {
             details = request.getAction() + " task: " + request.getTaskName();
         }
-        
+
+        String viewerKey = null;
+        if (details.startsWith("VIEWER=")) {
+            int separatorIndex = details.indexOf('|');
+            if (separatorIndex > 7) {
+                viewerKey = details.substring(7, separatorIndex);
+                details = details.substring(separatorIndex + 1);
+            }
+        }
+
         TaskHistory history = new TaskHistory(request.getAction(), request.getTaskName(), details);
+        history.setViewerKey(viewerKey);
         taskHistoryRepository.save(history);
-        
+
         System.out.println("Dashboard: Task " + request.getAction() + " - " + request.getTaskName());
-        
+
         responseObserver.onNext(EmptyResponse.newBuilder().build());
         responseObserver.onCompleted();
     }
@@ -122,12 +133,22 @@ public class DashboardServiceImpl extends DashboardServiceGrpc.DashboardServiceI
         if (details == null || details.isEmpty()) {
             details = request.getAction() + " worker: " + request.getWorkerName();
         }
-        
+
+        String viewerKey = null;
+        if (details.startsWith("VIEWER=")) {
+            int separatorIndex = details.indexOf('|');
+            if (separatorIndex > 7) {
+                viewerKey = details.substring(7, separatorIndex);
+                details = details.substring(separatorIndex + 1);
+            }
+        }
+
         TaskHistory history = new TaskHistory(request.getAction() + "_WORKER", request.getWorkerName(), details);
+        history.setViewerKey(viewerKey);
         taskHistoryRepository.save(history);
-        
+
         System.out.println("Dashboard: Worker " + request.getAction() + " - " + request.getWorkerName());
-        
+
         responseObserver.onNext(EmptyResponse.newBuilder().build());
         responseObserver.onCompleted();
     }

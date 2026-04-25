@@ -22,6 +22,10 @@
                 Refresh
             </button>
 
+            <button @click="resetMyData" class="btn-delete-status">
+                Reset My Data
+            </button>
+
         <div v-if="showStatusModal" class="modal-overlay" @click.self="closeStatusModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -333,6 +337,18 @@ const createCategory = async () => {
         loadCategories();
     } catch (e) {
         alert("Error creating category: " + (e.response?.data || e.message));
+    }
+};
+
+const resetMyData = async () => {
+    if (!confirm('Reset all your tasks, workers, statuses, categories and history?')) return;
+
+    try {
+        await api.resetMyData();
+        await Promise.all([loadTasks(), loadWorkers(), loadStatuses(), loadCategories()]);
+        alert('Your test data was reset');
+    } catch (e) {
+        alert('Error resetting data: ' + (e.response?.data || e.message));
     }
 };
 

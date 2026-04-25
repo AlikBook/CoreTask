@@ -1,10 +1,10 @@
 package Backend.demo.Entities.task;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 
 @Entity
 public class Tasks {
@@ -16,9 +16,12 @@ public class Tasks {
     private java.sql.Date dueDate;
     private String description;
 
+    @Column(length = 120)
+    private String viewerKey;
+
     private Integer workerId;
     private Integer statusId;
-    private Integer categoryId; 
+    private Integer categoryId;
 
     public Integer getTaskId() {
         return taskId;
@@ -47,7 +50,7 @@ public class Tasks {
     public String getDescription() {
         return description;
     }
-    
+
     public void setDescription(String description) {
         this.description = description;
     }
@@ -74,5 +77,13 @@ public class Tasks {
 
     public void setCategoryId(Integer categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getViewerKey() {
+        return viewerKey;
+    }
+
+    public void setViewerKey(String viewerKey) {
+        this.viewerKey = viewerKey;
     }
 }

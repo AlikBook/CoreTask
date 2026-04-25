@@ -8,4 +8,8 @@ import java.util.List;
 @Repository
 public interface TaskHistoryRepository extends JpaRepository<TaskHistory, Integer> {
     List<TaskHistory> findTop20ByOrderByTimestampDesc();
+
+    List<TaskHistory> findTop20ByViewerKeyOrderByTimestampDesc(String viewerKey);
+
+    void deleteByViewerKey(String viewerKey);
 }

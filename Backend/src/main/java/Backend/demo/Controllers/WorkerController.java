@@ -1,4 +1,5 @@
 package Backend.demo.Controllers;
+
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
@@ -18,64 +19,70 @@ public class WorkerController {
 
     @Autowired
     private WorkerRepository workerRepository;
-    
+
     private final TaskServiceGrpc.TaskServiceBlockingStub taskGrpcClient;
     private final DashboardServiceGrpc.DashboardServiceBlockingStub dashboardGrpcClient;
-    
+
     public WorkerController() {
         ManagedChannel channel = ManagedChannelBuilder
-            .forAddress("localhost", 9090)
-            .usePlaintext()
-            .build();
+                .forAddress("localhost", 9090)
+                .usePlaintext()
+                .build();
         this.taskGrpcClient = TaskServiceGrpc.newBlockingStub(channel);
         this.dashboardGrpcClient = DashboardServiceGrpc.newBlockingStub(channel);
     }
 
-
     @GetMapping
-    public List<Worker> getWorkers() {
-        List<Worker> worker_list = workerRepository.findAll();
-        
-        return worker_list;        
+    public List<Worker> getWorkers(@RequestHeader("X-Viewer-Key") String rawViewerKey) {
+        String viewerKey = ViewerKeyResolver.resolve(rawViewerKey);
+        List<Worker> worker_list = workerRepository.findAllByViewerKey(viewerKey);
+
+        return worker_list;
     }
 
     @GetMapping("/{id}")
-    public Worker getWorkerbyID(@PathVariable Integer id) {
-        return workerRepository.findById(id)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GET | Worker with id : "+ id+ " not found"));
+    public Worker getWorkerbyID(@PathVariable Integer id, @RequestHeader("X-Viewer-Key") String rawViewerKey) {
+        String viewerKey = ViewerKeyResolver.resolve(rawViewerKey);
+        return workerRepository.findByWorkerIdAndViewerKey(id, viewerKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "GET | Worker with id : " + id + " not found"));
     }
 
     @PostMapping
-    public Worker createWorker(@RequestBody Worker worker) {
+    public Worker createWorker(@RequestBody Worker worker, @RequestHeader("X-Viewer-Key") String rawViewerKey) {
+        String viewerKey = ViewerKeyResolver.resolve(rawViewerKey);
+        worker.setViewerKey(viewerKey);
         Worker savedWorker = workerRepository.save(worker);
-        
+
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
-                .setAction("CREATE")
-                .setWorkerName(savedWorker.getWorkerName() + " " + savedWorker.getWorkerLastName())
-                .setDetails("Worker created with ID: " + savedWorker.getWorkerId())
-                .build();
+                    .setAction("CREATE")
+                    .setWorkerName(savedWorker.getWorkerName() + " " + savedWorker.getWorkerLastName())
+                    .setDetails("VIEWER=" + viewerKey + "|Worker created with ID: " + savedWorker.getWorkerId())
+                    .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
             System.out.println("Dashboard notification failed: " + e.getMessage());
         }
-        
+
         return savedWorker;
     }
 
     @DeleteMapping("/{id}")
-    public void deleteWorker(@PathVariable Integer id) {
-        Worker worker = workerRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DELETE | Worker with id : "+id + " not found"));
-        
+    public void deleteWorker(@PathVariable Integer id, @RequestHeader("X-Viewer-Key") String rawViewerKey) {
+        String viewerKey = ViewerKeyResolver.resolve(rawViewerKey);
+        Worker worker = workerRepository.findByWorkerIdAndViewerKey(id, viewerKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "DELETE | Worker with id : " + id + " not found"));
+
         String workerName = worker.getWorkerName() + " " + worker.getWorkerLastName();
-        
+
         try {
             UnassignWorkerRequest request = UnassignWorkerRequest.newBuilder()
-                .setWorkerId(id)
-                .build();
+                    .setWorkerId(id)
+                    .build();
             UnassignWorkerResponse response = taskGrpcClient.unassignWorkerFromTasks(request);
-            
+
             if (response.getTasksModified() > 0) {
                 System.out.println("gRPC: Unassigned worker from " + response.getTasksModified() + " task(s)");
             } else {
@@ -84,15 +91,15 @@ public class WorkerController {
         } catch (Exception e) {
             System.out.println("gRPC unassign failed: " + e.getMessage() + ", proceeding with deletion anyway");
         }
-        
+
         workerRepository.deleteById(id);
-        
+
         try {
             WorkerChangeRequest request = WorkerChangeRequest.newBuilder()
-                .setAction("DELETE")
-                .setWorkerName(workerName)
-                .setDetails("Worker deleted with ID: " + id)
-                .build();
+                    .setAction("DELETE")
+                    .setWorkerName(workerName)
+                    .setDetails("VIEWER=" + viewerKey + "|Worker deleted with ID: " + id)
+                    .build();
             dashboardGrpcClient.notifyWorkerChange(request);
         } catch (Exception e) {
             System.out.println("Dashboard notification failed: " + e.getMessage());
@@ -100,13 +107,17 @@ public class WorkerController {
     }
 
     @PutMapping("/{id}")
-    public Worker updateWorker(@PathVariable Integer id, @RequestBody Worker updatedWorker) {
-        return workerRepository.findById(id)
-        .map(existingWorker -> {
-            existingWorker.setWorkerName(updatedWorker.getWorkerName());
-            existingWorker.setWorkerLastName(updatedWorker.getWorkerLastName());
-            return workerRepository.save(existingWorker);
-        })
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PUT | Worker with id :"+ id +" not found"));
+    public Worker updateWorker(@PathVariable Integer id, @RequestBody Worker updatedWorker,
+            @RequestHeader("X-Viewer-Key") String rawViewerKey) {
+        String viewerKey = ViewerKeyResolver.resolve(rawViewerKey);
+        return workerRepository.findByWorkerIdAndViewerKey(id, viewerKey)
+                .map(existingWorker -> {
+                    existingWorker.setWorkerName(updatedWorker.getWorkerName());
+                    existingWorker.setWorkerLastName(updatedWorker.getWorkerLastName());
+                    existingWorker.setViewerKey(viewerKey);
+                    return workerRepository.save(existingWorker);
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "PUT | Worker with id :" + id + " not found"));
     }
 }
